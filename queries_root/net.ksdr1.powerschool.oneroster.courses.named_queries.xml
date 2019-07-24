@@ -1,0 +1,65 @@
+<queries>
+  <query name="net.ksdr1.powerschool.oneroster.courses" coreTable="courses" flattened="true">
+	<summary>OneRoster 1.1 courses</summary>
+    <columns>
+      <column column="COURSES.DCID">a_sourcedid</column>
+	  <column column="COURSES.CREDITTYPE">b_status</column>
+	  <column column="COURSES.MULTITERM">c_datelastmodified</column>
+	  <column column="COURSES.EXCLUDEFROMGPA">d_schoolYearSourcedId</column>
+	  <column column="COURSES.COURSE_NAME">e_title</column>
+	  <column column="COURSES.COURSE_NUMBER">f_courseCode</column>
+	  <column column="COURSES.REGGRADELEVELS">g_grades</column>
+	  <column column="COURSES.CODE">h_orgSourcedId</column>
+	  <column column="COURSES.SCHED_COURSESUBJECTAREACODE">i_subjects</column>
+	  <column column="COURSES.SCHED_SCHEDULETYPECODE">j_subjectCodes</column>
+    </columns>
+    <sql><![CDATA[
+with yearquery as (select 
+  id
+from terms
+where portion = 1
+  AND sysdate BETWEEN firstday-30 and lastday+30
+  AND schoolid=0
+),
+sc as (select 
+					s.dcid,
+					s.school_number schoolid, 
+					';' || UPPER(s.activecrslist) || ';' courselist 
+  				 from schools s),
+schcourses as (
+	select
+		sc.dcid schooldcid, 
+		sc.schoolid, 
+		c.dcid coursedcid, 
+		c.course_number,
+		c.course_name,
+		c.credit_hours,
+		c.code,
+		c.vocational,
+		c.credittype,
+		c.gradescaleid,
+		c.excludefromgpa,
+		c.excludefromclassrank,
+		c.excludefromhonorroll,
+		c.exclude_ada		
+     from courses c
+          inner join sc on sc.courselist like '%;' || UPPER(c.course_number) || ';%'
+)
+select
+  distinct coursedcid as sourcedId,
+  'active' as status,
+  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  y.id as schoolYearSourcedId,
+  course_name as title,
+  course_number as courseCode,
+  null as grades,
+  cast ((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10)) as orgSourcedId,
+  null as subjects,
+  null as subjectCodes
+  
+from schcourses
+left join yearquery y on 1=1
+    ]]></sql>
+  </query>
+  <!-- Define more queries here -->
+</queries>

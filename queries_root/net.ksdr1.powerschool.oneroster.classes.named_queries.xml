@@ -1,0 +1,61 @@
+<queries>
+  <query name="net.ksdr1.powerschool.oneroster.classes" coreTable="sections" flattened="true">
+	<summary>OneRoster 1.1 classes</summary>
+    <columns>
+      <column column="SECTIONS.ID">a_sourcedid</column>
+	  <column column="SECTIONS.TEAM">b_status</column>
+	  <column column="SECTIONS.GRADEPROFILE">c_dateLastModified</column>
+	  <column column="COURSES.COURSE_NAME">d_title</column>
+	  <column column="SECTIONS.EXTERNAL_EXPRESSION">e_grades</column>
+	  <column column="SECTIONS.COURSE_NUMBER">f_courseSourcedId</column>
+	  <column column="SECTIONS.INSTRUCTION_LANG">g_classCode</column>
+	  <column column="SECTIONS.SECTION_TYPE">h_classType</column>
+	  <column column="SECTIONS.ROOM">i_location</column>
+	  <column column="SECTIONS.SCHOOLID">j_schoolSourcedId</column>
+	  <column column="SECTIONS.TERMID">k_termSourcedIds</column>
+	  <column column="SECTIONS.FASTPERLIST">l_subjects</column>
+	  <column column="SECTIONS.ATT_MODE_CODE">m_subjectCodes</column>
+	  <column column="SECTIONS.EXPRESSION">n_periods</column>
+    </columns>
+    <sql><![CDATA[
+with yearquery as (select 
+  id, abbreviation
+from terms
+where portion = 1
+  AND sysdate BETWEEN firstday-30 and lastday+30
+  AND schoolid=0
+)
+select
+  sections.id as sourcedId,
+  'active' as status,
+  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  case
+    when yearquery.id = sections.termid then yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
+    else yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
+  end as title,
+  case 
+    when sections.grade_level <= -3 then 'IT'
+    when sections.grade_level between -2 and -1 then 'PK'
+    when sections.grade_level = 0 then 'KG'
+    when sections.grade_level between 1 and 12 then to_char(sections.grade_level,'00')
+    when sections.grade_level > 12 then 'PS'
+    else 'Other'
+  end as grades,
+  courses.dcid as courseSourcedId,
+  null as classCode,
+  'scheduled' as classType,
+  sections.room as location,
+  sections.schoolid as schoolSourcedId,
+  terms.id as termSourcedIds,
+  null as subjects,
+  null as subjectCodes,
+  null as periods
+from sections
+left join courses on sections.course_number = courses.course_number
+left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
+left join yearquery on 1=1
+where sections.termid between yearquery.id and yearquery.id+99
+    ]]></sql>
+  </query>
+  <!-- Define more queries here -->
+</queries>

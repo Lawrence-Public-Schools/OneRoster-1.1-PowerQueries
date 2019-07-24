@@ -1,0 +1,5 @@
+<plugin xmlns="http://plugin.powerschool.pearson.com" name="OneRoster PowerQueries" version="0.1.9.2">
+	<publisher name="Kearney MO School District">
+		<contact email="blankenshipr@ksdr1.net" />
+	</publisher>
+</plugin>

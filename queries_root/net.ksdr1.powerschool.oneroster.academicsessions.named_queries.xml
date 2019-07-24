@@ -1,0 +1,123 @@
+<queries>
+  <query name="net.ksdr1.powerschool.oneroster.academicSessions" coreTable="terms" flattened="true">
+	<summary>OneRoster 1.1 academicSessions</summary>
+    <columns>
+      <column column="TERMS.ID">a_sourcedid</column>
+	  <column column="TERMS.ABBREVIATION">b_status</column>
+	  <column column="TERMS.TERMINFO_GUID">c_datelastmodified</column>
+	  <column column="TERMS.NAME">d_title</column>
+	  <column column="TERMS.PORTION">e_type</column>
+	  <column column="TERMS.FIRSTDAY">f_startdate</column>
+	  <column column="TERMS.LASTDAY">g_enddate</column>
+	  <column column="TERMS.ISYEARREC">h_parentsourcedid</column>
+	  <column column="TERMS.YEARID">i_schoolyear</column>
+    </columns>
+    <sql><![CDATA[
+with yearquery as (select 
+  id as sourcedId,
+  'active' as status,
+  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  name as title,
+  'schoolYear' as type,
+  to_char(firstday,'yyyy-mm-dd') as startDate,
+  to_char(lastday,'yyyy-mm-dd') as endDate,
+  null as parentSourcedId,
+  to_char(lastday,'yyyy') as schoolYear
+from terms
+where portion = 1
+  AND sysdate BETWEEN firstday-30 and lastday+30
+  AND schoolid=0
+order by startDate
+),
+semestersquery as (
+select
+  s.id as sourcedId,
+  'active' as status,
+  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  s.name as title,
+  'semester' as type,
+  to_char(s.firstday,'yyyy-mm-dd') as startDate,
+  to_char(s.lastday,'yyyy-mm-dd') as endDate,
+  y.id as parentSourcedId,
+  to_char(y.lastday,'yyyy') as schoolYear
+from terms s
+left join terms y on (
+  s.firstday between y.firstday and y.lastday
+  and s.portion = 2
+  and y.portion = 1
+)
+where s.portion = 2
+  AND s.schoolid = 0
+  AND y.schoolid = 0
+  AND s.yearid = (select sourcedid/100 from yearquery)
+order by startDate
+)
+,
+quartersquery as (
+select
+  q.id as sourcedId,
+  'active' as status,
+  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  q.name as title,
+  'gradingPeriod' as type,
+  to_char(q.firstday,'yyyy-mm-dd') as startDate,
+  to_char(q.lastday,'yyyy-mm-dd') as endDate,
+  s.id as parentSourcedId,
+  to_char(y.lastday,'yyyy') as schoolYear
+from terms q
+left join terms s on (
+  q.firstday between s.firstday and s.lastday
+  and s.portion = 2
+  and q.portion = 4
+)
+left join terms y on (
+  q.firstday between y.firstday and y.lastday
+  and q.portion = 4
+  and y.portion = 1
+)
+where q.portion = 4
+  AND s.schoolid = 0
+  AND q.schoolid = 0
+  and y.schoolid = 0
+  AND q.yearid = (select sourcedid/100 from yearquery)
+order by startDate
+)
+select
+  sourcedid,
+  status,
+  datelastmodified,
+  title,
+  type,
+  startdate,
+  enddate,
+  parentsourcedid,
+  schoolyear
+from yearquery
+union all
+select 
+  sourcedid,
+  status,
+  datelastmodified,
+  title,
+  type,
+  startdate,
+  enddate,
+  parentsourcedid,
+  schoolyear
+from semestersquery
+union all
+select
+  sourcedid,
+  status,
+  datelastmodified,
+  title,
+  type,
+  startdate,
+  enddate,
+  parentsourcedid,
+  schoolyear
+from quartersquery
+    ]]></sql>
+  </query>
+  <!-- Define more queries here -->
+</queries>
