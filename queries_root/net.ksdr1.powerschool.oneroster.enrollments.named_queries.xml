@@ -2,9 +2,9 @@
   <query name="net.ksdr1.powerschool.oneroster.enrollments" coreTable="cc" flattened="true">
 	<summary>OneRoster 1.1 enrollments</summary>
     <columns>
-      <column column="CC.STUDENTSECTENRL_GUID">a_sourcedid</column>
+      <column column="CC.STUDENTSECTENRL_GUID">a_sourcedId</column>
 	  <column column="CC.SECTION_NUMBER">b_status</column>
-	  <column column="CC.LASTGRADEUPDATE">c_datelastmodified</column>
+	  <column column="CC.LASTGRADEUPDATE">c_dateLastModified</column>
 	  <column column="CC.SECTIONID">d_classSourcedId</column>
 	  <column column="CC.ID">e_schoolSourcedId</column>
 	  <column column="CC.COURSE_NUMBER">f_userSourcedId</column>
@@ -18,27 +18,28 @@ with yearquery as (select
   id, abbreviation
 from terms
 where portion = 1
-  AND sysdate BETWEEN firstday-30 and lastday+30
+  AND terms.lastday > sysdate
+  AND sysdate > terms.firstday-30
   AND schoolid=0
 )
 
 select 
-  'T'||sectionteacher.id as sourcedId,
-  'active' as status,
-  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  'ST'||sectionteacher.id||'-T'||schoolstaff.users_dcid as sourcedId,
+  null as status,
+  null as dateLastModified,
   sectionteacher.sectionid as classSourcedId,
   sections.schoolid as schoolSourcedId,
   'T'||schoolstaff.users_dcid as userSourcedId,
-  case sectionteacher.roleid
-    when 21 then 'teacher'
-    when 22 then 'teacher'
-    when 24 then 'aide'
+  case roledef.name
+    when 'Lead Teacher' then 'teacher'
+    when 'Co-teacher' then 'teacher'
+    when 'Teacher''s Aide' then 'aide'
     else 'aide'
   end as role,
-  case sectionteacher.roleid
-    when 21 then 'true'
-    when 22 then 'false'
-    when 24 then 'false'
+  case roledef.name
+    when 'Lead Teacher' then 'true'
+    when 'Co-teacher' then 'false'
+    when 'Teacher''s Aide' then 'false'
     else 'false'
   end as primary,
   to_char(sectionteacher.start_date,'yyyy-mm-dd') as beginDate,
@@ -47,31 +48,50 @@ select
   
 from sectionteacher
 left join schoolstaff on schoolstaff.id = sectionteacher.teacherid
+left join users on schoolstaff.users_dcid = users.dcid
 left join sections on sectionteacher.sectionid = sections.id
-where sectionteacher.roleid in (21,22)
+left join schools on users.homeschoolid = schools.school_number
+left join roledef on sectionteacher.roleid = roledef.id
+left join courses on sections.course_number = courses.course_number
+where roledef.name in ('Lead Teacher','Co-teacher','Teacher''s Aide')
 and sectionteacher.sectionid in 
 (
   select sections.id from sections
   left join yearquery on 1=1
   where sections.termid between yearquery.id and yearquery.id+99
 )
+and schoolstaff.status = 1
+and schoolstaff.staffstatus = 1
+and schools.state_excludefromreporting = 0
+and (users.teacherloginid is not null or users.loginid is not null)
+
 union all
 
 select
  'S'||cc.dcid as sourcedId,
- 'active' as status,
- to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+ null as status,
+ null as dateLastModified,
  cc.sectionid as classSourcedId,
  cc.schoolid as schoolSourcedId,
  'S'||students.dcid as userSourcedId,
  'student' as role,
  null as primary,
  to_char(cc.dateenrolled,'yyyy-mm-dd') as beginDate,
- to_char(cc.dateleft,'yyyy-mm-dd') as endDate
+ to_char(cc.dateleft-1,'yyyy-mm-dd') as endDate
 from cc
 left join students on cc.studentid = students.id
+left join schools on cc.schoolid = schools.school_number
 left join yearquery on 1=1
-where cc.termid between yearquery.id and yearquery.id+99
+left join schools on students.schoolid = schools.school_number
+left join sync_studentmap on students.dcid = sync_studentmap.studentsdcid
+left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid
+left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
+left join courses on cc.course_number = courses.course_number
+where students.enroll_status = 0
+and psm_studentcontacttype.name = 'Self'
+and schools.STATE_EXCLUDEFROMREPORTING = 0
+and (cc.termid between yearquery.id and yearquery.id+99)
+and cc.dateleft > cc.dateenrolled
     ]]></sql>
   </query>
   <!-- Define more queries here -->
