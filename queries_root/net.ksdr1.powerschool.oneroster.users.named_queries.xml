@@ -2,9 +2,9 @@
   <query name="net.ksdr1.powerschool.oneroster.users" coreTable="users" flattened="true">
 	<summary>OneRoster 1.1 users</summary>
     <columns>
-      <column column="USERS.STATE">a_sourcedid</column>
+      <column column="USERS.STATE">a_sourcedId</column>
 	  <column column="SCHOOLSTAFF.STATUS">b_status</column>
-	  <column column="USERS.HOMEROOM">c_datelastmodified</column>
+	  <column column="USERS.HOMEROOM">c_dateLastModified</column>
 	  <column column="SCHOOLSTAFF.STATUS">d_enabledUser</column>
 	  <column column="USERS.HOMESCHOOLID">e_orgSourcedIds</column>
 	  <column column="USERS.LOGINID">f_role</column>
@@ -28,14 +28,20 @@ select
     when 1 then 'active'
     else 'inactive'
   end as status,
-  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  null as dateLastModified,
   case schoolstaff.status
     when 1 then 'true'
     else 'false'
   end as enabledUser,
-  users.homeschoolid as orgSourcedIds,
+  case cast(users.homeschoolid as varchar2(10))
+    when '0' then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
+    else cast(users.homeschoolid as varchar2(10))
+  end as orgSourcedIds,
   'teacher' as role,
-  users.teacherloginid as username,
+  case 
+    when users.teacherloginid is not null then users.teacherloginid
+    else users.loginid
+  end as username,
   null as userIds,
   users.first_name as givenName,
   users.last_name as familyName,
@@ -49,9 +55,13 @@ select
   null as password
 from users
 left join schoolstaff on users.dcid = schoolstaff.users_dcid
+left join schools on schools.school_number = users.homeschoolid
 where users.homeschoolid = schoolstaff.schoolid
 and schoolstaff.STATUS = 1
 and schoolstaff.staffstatus = 1
+and schools.state_excludefromreporting = 0
+and users.email_addr is not null
+and (users.teacherloginid is not null or users.loginid is not null)
 union all
 select
   'S'||students.dcid as sourcedId,
@@ -59,12 +69,12 @@ select
     when 0 then 'active'
     else 'inactive'
   end as status,
-  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  null as dateLastModified,
   case students.enroll_status
     when 0 then 'true'
     else 'false'
   end as enabledUser,
-  students.schoolid as orgSourcedIds,
+  cast(students.schoolid as varchar2(10)) as orgSourcedIds,
   'student' as role,
   students.student_web_id as username,
   null as userIds,
@@ -86,11 +96,13 @@ select
   end as grades,
   null as password
 from students
+left join schools on students.schoolid = schools.school_number
 left join sync_studentmap on students.dcid = sync_studentmap.studentsdcid
 left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid
 left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
 where students.enroll_status = 0
 and psm_studentcontacttype.name = 'Self'
+and schools.STATE_EXCLUDEFROMREPORTING = 0
     ]]></sql>
   </query>
   <!-- Define more queries here -->

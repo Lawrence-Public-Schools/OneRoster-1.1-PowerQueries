@@ -1,0 +1,145 @@
+<queries>
+  <query name="net.ksdr1.powerschool.oneroster.demographics" coreTable="users" flattened="true">
+	<summary>OneRoster 1.1 demographics</summary>
+    <columns>
+      <column column="USERS.STATE">a_sourcedId</column>
+	  <column column="SCHOOLSTAFF.STATUS">b_status</column>
+	  <column column="USERS.HOMEROOM">c_dateLastModified</column>
+	  <column column="USERSCOREFIELDS.DOB">d_birthDate</column>
+	  <column column="USERSCOREFIELDS.GENDER">e_sex</column>
+	  <column column="TEACHERRACE.RACECD">f_americanIndianOrAlaskaNative</column>
+	  <column column="TEACHERRACE.RACECD">g_asian</column>
+	  <column column="TEACHERRACE.RACECD">h_blackOrAfricanAmerican</column>
+	  <column column="TEACHERRACE.RACECD">i_nativeHawaiianOrOtherPacificIslander</column>
+	  <column column="TEACHERRACE.RACECD">j_white</column>
+	  <column column="TEACHERRACE.RACECD">k_demographicRaceTwoOrMoreRaces</column>
+	  <column column="USERS.ETHNICITY">l_hispanicOrLatinoEthnicity</column>
+	  <column column="USERS.EMAIL_ADDR">m_countryOfBirthCode</column>
+	  <column column="USERS.SCHOOL_PHONE">n_stateOfBirthAbbreviation</column>
+	  <column column="USERS.CITY">o_cityOfBirth</column>
+	  <column column="USERS.CITY">p_publicSchoolResidenceStatus</column>
+    </columns>
+    <sql><![CDATA[
+select 
+  'T'||users.dcid as sourcedId,
+  'active' as status,
+  null as dateLastModified,
+  case
+    when regexp_like(userscorefields.dob,'^(((0?[1-9]|1[012])/(0?[1-9]|1\d|2[0-8])|(0?[13456789]|1[012])/(29|30)|(0?[13578]|1[02])/31)/(19|[2-9]\d)\d{2}|0?2/29/((19|[2-9]\d)(0[48]|[2468][048]|[13579][26])|(([2468][048]|[3579][26])00)))$') 
+      then to_char(to_date(userscorefields.dob,'MM/DD/YYYY'),'YYYY-MM-DD')
+    else null
+  end as birthDate,
+  
+  case upper(userscorefields.gender)
+    when 'M' then 'male'
+    when 'F' then 'female'
+    else null
+  end as sex,
+  case 
+    when (REGEXP_SUBSTR(t_race_query.racecomma,'I') = 'I') or (users.ethnicity = 'I') then 'true'
+    else 'false'
+  end as americanIndianOrAlaksaNative,
+  case 
+    when (REGEXP_SUBSTR(t_race_query.racecomma,'A') = 'A') or (users.ethnicity = 'A') then 'true'
+    else 'false'
+  end as asian,
+  case 
+    when (REGEXP_SUBSTR(t_race_query.racecomma,'B') = 'B') or (users.ethnicity = 'B') then 'true'
+    else 'false'
+  end as blackOrAfricanAmerican,
+  case 
+    when (REGEXP_SUBSTR(t_race_query.racecomma,'P') = 'P') or (users.ethnicity = 'P') then 'true'
+    else 'false'
+  end as nativeHawaiianOrOtherPacificIs,
+  case 
+    when (REGEXP_SUBSTR(t_race_query.racecomma,'W') = 'W') or (users.ethnicity = 'W') then 'true'
+    else 'false'
+  end as white,
+  case 
+    when (REGEXP_SUBSTR(t_race_query.racecomma,'M') = 'M') or (users.ethnicity = 'M') then 'true'
+    else 'false'
+  end as demographicRaceTwoOrMoreRaces,
+  case users.fedethnicity
+    when 1 then 'true'
+    else 'false'
+  end as hispanicOrLatinoEthnicity,
+  null as countryOfBirthCode,
+  null as stateOfBirthAbbreviation,
+  null as cityOfBirth,
+  null as publicSchoolResidenceStatus
+from users
+left join userscorefields on users.dcid = userscorefields.usersdcid
+left join schools on users.homeschoolid = schools.school_number
+left join schoolstaff on schoolstaff.users_dcid = users.dcid
+left join (
+  select schoolstaff.id, (listagg(teacherrace.racecd,',') within group (order by teacherrace.racecd)) racecomma from users 
+  left join schoolstaff on schoolstaff.users_dcid = users.dcid
+  left join teacherrace on schoolstaff.id = teacherrace.teacherid
+  and users.homeschoolid = schoolstaff.schoolid
+  group by schoolstaff.id
+  ) t_race_query on schoolstaff.id = t_race_query.id
+where users.homeschoolid = schoolstaff.schoolid and schoolstaff.status=1 and schoolstaff.staffstatus=1 and schools.state_excludefromreporting = 0
+and (users.teacherloginid is not null or users.loginid is not null)
+
+union all
+
+select
+ 'S'||students.dcid as sourcedId,
+ 'active' as status,
+ null as dateLastModified,
+ to_char(students.dob,'YYYY-MM-DD') as birthDate,
+ case upper(students.gender)
+    when 'M' then 'male'
+    when 'F' then 'female'
+    else null
+  end as sex,
+ case 
+    when (REGEXP_SUBSTR(s_race_query.racecomma,'I') = 'I') or (students.ethnicity = 'I') then 'true'
+    else 'false'
+  end as americanIndianOrAlaksaNative,
+  case 
+    when (REGEXP_SUBSTR(s_race_query.racecomma,'A') = 'A') or (students.ethnicity = 'A') then 'true'
+    else 'false'
+  end as asian,
+  case 
+    when (REGEXP_SUBSTR(s_race_query.racecomma,'B') = 'B') or (students.ethnicity = 'B') then 'true'
+    else 'false'
+  end as blackOrAfricanAmerican,
+  case 
+    when (REGEXP_SUBSTR(s_race_query.racecomma,'P') = 'P') or (students.ethnicity = 'P') then 'true'
+    else 'false'
+  end as nativeHawaiianOrOtherPacificIs,
+  case 
+    when (REGEXP_SUBSTR(s_race_query.racecomma,'W') = 'W') or (students.ethnicity = 'W') then 'true'
+    else 'false'
+  end as white,
+  case 
+    when (REGEXP_SUBSTR(s_race_query.racecomma,'M') = 'M') or (students.ethnicity = 'M') then 'true'
+    else 'false'
+  end as demographicRaceTwoOrMoreRaces,
+  case students.fedethnicity
+    when 1 then 'true'
+    else 'false'
+  end as hispanicOrLatinoEthnicity,
+  null as countryOfBirthCode,
+  null as stateOfBirthAbbreviation,
+  null as cityOfBirth,
+  null as publicSchoolResidenceStatus
+from students
+left join (
+select students.id, (listagg(studentrace.racecd,',') within group (order by studentrace.racecd)) racecomma from students 
+  left join studentrace on students.id = studentrace.studentid
+  where students.enroll_status = 0
+  group by students.id
+  ) s_race_query on s_race_query.id = students.id
+left join schools on students.schoolid = schools.school_number
+left join sync_studentmap on students.dcid = sync_studentmap.studentsdcid
+left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid
+left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
+where students.enroll_status = 0
+and psm_studentcontacttype.name = 'Self'
+and schools.STATE_EXCLUDEFROMREPORTING = 0
+    ]]></sql>
+  </query>
+  <!-- Define more queries here -->
+</queries>

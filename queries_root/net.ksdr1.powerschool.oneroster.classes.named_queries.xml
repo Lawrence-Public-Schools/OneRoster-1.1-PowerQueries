@@ -2,7 +2,7 @@
   <query name="net.ksdr1.powerschool.oneroster.classes" coreTable="sections" flattened="true">
 	<summary>OneRoster 1.1 classes</summary>
     <columns>
-      <column column="SECTIONS.ID">a_sourcedid</column>
+      <column column="SECTIONS.ID">a_sourcedId</column>
 	  <column column="SECTIONS.TEAM">b_status</column>
 	  <column column="SECTIONS.GRADEPROFILE">c_dateLastModified</column>
 	  <column column="COURSES.COURSE_NAME">d_title</column>
@@ -28,7 +28,7 @@ where portion = 1
 select
   sections.id as sourcedId,
   'active' as status,
-  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  null as dateLastModified,
   case
     when yearquery.id = sections.termid then yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
     else yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
@@ -53,8 +53,10 @@ select
 from sections
 left join courses on sections.course_number = courses.course_number
 left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
+left join schools on schools.school_number=sections.schoolid
 left join yearquery on 1=1
-where sections.termid between yearquery.id and yearquery.id+99
+where (sections.termid between yearquery.id and yearquery.id+99)
+and schools.state_excludefromreporting=0
     ]]></sql>
   </query>
   <!-- Define more queries here -->

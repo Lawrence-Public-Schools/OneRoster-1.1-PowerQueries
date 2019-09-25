@@ -2,19 +2,19 @@
   <query name="net.ksdr1.powerschool.oneroster.orgs" coreTable="schools" flattened="true">
 	<summary>OneRoster 1.1 orgs</summary>
     <columns>
-      <column column="SCHOOLS.SCHOOL_NUMBER">a_sourcedid</column>
+      <column column="SCHOOLS.SCHOOL_NUMBER">a_sourcedId</column>
 	  <column column="SCHOOLS.ABBREVIATION">b_status</column>
-	  <column column="SCHOOLS.SCHOOLCOUNTRY">c_datelastmodified</column>
+	  <column column="SCHOOLS.SCHOOLCOUNTRY">c_dateLastModified</column>
 	  <column column="SCHOOLS.NAME">d_name</column>
 	  <column column="SCHOOLS.PRINCIPAL">e_type</column>
 	  <column column="SCHOOLS.PORTALID">f_identifier</column>
-	  <column column="SCHOOLS.COUNTYNAME">g_parentsourcedid</column>
+	  <column column="SCHOOLS.COUNTYNAME">g_parentSourcedId</column>
     </columns>
     <sql><![CDATA[
 (select
   cast ((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10)) as sourcedId,
   'active' as status,
-  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  null as dateLastModified,
   cast ((select prefs.value from prefs where prefs.name = 'districtname') as varchar2(50)) as name,
   'district' as type,
   null as identifier,
@@ -24,7 +24,7 @@ union all
 (select
   cast(schools.school_number as varchar2(10)) as sourcedId,
   'active' as status,
-  to_char(sysdate,'yyyy-mm-dd"T"hh24' || chr(58) || 'mi' || chr(58) || 'ss".000Z"') as dateLastModified,
+  null as dateLastModified,
   schools.name as name,
   'school' as type,
   null as identifier,
