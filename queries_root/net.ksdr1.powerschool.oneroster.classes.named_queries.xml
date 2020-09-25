@@ -27,7 +27,10 @@ where portion = 1
 )
 select
   sections.id as sourcedId,
-  'active' as status,
+  case 
+    when sections.Exclude_State_Rpt_YN = 0 then 'active'
+    else 'inactive'
+  end as status,
   null as dateLastModified,
   case
     when yearquery.id = sections.termid then yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
