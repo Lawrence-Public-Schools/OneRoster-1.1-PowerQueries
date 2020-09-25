@@ -33,6 +33,15 @@ union all
   null as identifier,
   cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10)) as parentSourcedId
 from schools
+left join (
+    select s.schoolid,
+    COUNT(s.ID) as NO_OF_SECTIONS 
+    from sections s
+    join terms tb on tb.id=s.termid and tb.schoolid=s.schoolid
+    where s.termid>= 3000 and tb.lastday>=sysdate
+    GROUP BY s.schoolid
+    ORDER BY NO_OF_SECTIONS DESC
+) q ON schools.SCHOOL_NUMBER = q.schoolid
 )
     ]]></sql>
   </query>
