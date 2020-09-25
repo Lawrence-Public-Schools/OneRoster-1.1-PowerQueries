@@ -64,11 +64,13 @@ select
   'S'||students.dcid as sourcedId,
   case students.enroll_status 
     when 0 then 'active'
+    when -1 then 'active'
     else 'inactive'
   end as status,
   null as dateLastModified,
   case students.enroll_status
     when 0 then 'true'
+    when -1 then 'true'
     else 'false'
   end as enabledUser,
   cast(students.schoolid as varchar2(10)) as orgSourcedIds,
