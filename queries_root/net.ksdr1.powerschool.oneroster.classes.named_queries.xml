@@ -58,7 +58,14 @@ left join courses on sections.course_number = courses.course_number
 left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
 left join schools on schools.school_number=sections.schoolid
 left join yearquery on 1=1
+left join (SELECT 
+    sectionid,
+    COUNT(sectionid) as NO_OF_STUDENTS
+    from cc
+    GROUP BY sectionid
+    ) q ON sections.id = q.sectionid
 where (sections.termid between yearquery.id and yearquery.id+99)
+Order by q.NO_OF_STUDENTS desc
     ]]></sql>
   </query>
   <!-- Define more queries here -->
