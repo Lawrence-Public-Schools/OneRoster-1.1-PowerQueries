@@ -22,7 +22,8 @@ with yearquery as (select
   id, abbreviation
 from terms
 where portion = 1
-  AND sysdate BETWEEN firstday-30 and lastday+30
+  AND terms.lastday > sysdate
+  AND sysdate > terms.firstday-30
   AND schoolid=0
 )
 select

@@ -18,12 +18,13 @@ with yearquery as (select
   id, abbreviation
 from terms
 where portion = 1
-  AND sysdate BETWEEN firstday-30 and lastday+30
+  AND terms.lastday > sysdate
+  AND sysdate > terms.firstday-30
   AND schoolid=0
 )
 
 select 
-  'T'||sectionteacher.id as sourcedId,
+  'ST'||sectionteacher.id||'-T'||schoolstaff.users_dcid as sourcedId,
   'active' as status,
   null as dateLastModified,
   sectionteacher.sectionid as classSourcedId,
@@ -51,6 +52,7 @@ left join users on schoolstaff.users_dcid = users.dcid
 left join sections on sectionteacher.sectionid = sections.id
 left join schools on users.homeschoolid = schools.school_number
 left join roledef on sectionteacher.roleid = roledef.id
+left join courses on sections.course_number = courses.course_number
 where roledef.name in ('Lead Teacher','Co-teacher','Teacher''s Aide')
 and sectionteacher.sectionid in 
 (
@@ -62,6 +64,7 @@ and schoolstaff.status = 1
 and schoolstaff.staffstatus = 1
 and schools.state_excludefromreporting = 0
 and (users.teacherloginid is not null or users.loginid is not null)
+
 union all
 
 select
@@ -83,10 +86,12 @@ left join schools on students.schoolid = schools.school_number
 left join sync_studentmap on students.dcid = sync_studentmap.studentsdcid
 left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid
 left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
+left join courses on cc.course_number = courses.course_number
 where students.enroll_status = 0
 and psm_studentcontacttype.name = 'Self'
 and schools.STATE_EXCLUDEFROMREPORTING = 0
 and (cc.termid between yearquery.id and yearquery.id+99)
+and cc.dateleft > cc.dateenrolled
     ]]></sql>
   </query>
   <!-- Define more queries here -->
