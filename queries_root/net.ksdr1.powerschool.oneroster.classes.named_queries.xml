@@ -56,7 +56,6 @@ left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
 left join schools on schools.school_number=sections.schoolid
 left join yearquery on 1=1
 where (sections.termid between yearquery.id and yearquery.id+99)
-and schools.state_excludefromreporting=0
     ]]></sql>
   </query>
   <!-- Define more queries here -->
