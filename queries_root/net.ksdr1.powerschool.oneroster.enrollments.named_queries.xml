@@ -32,13 +32,21 @@ select
   case roledef.name
     when 'Lead Teacher' then 'teacher'
     when 'Co-teacher' then 'teacher'
+    when 'DESE Co-teacher' then 'teacher'
+    when 'ESL/SPED Teacher' then 'teacher'
     when 'Teacher''s Aide' then 'aide'
+    when 'Principal' then 'administrator'
+    when 'School Administrator' then 'administrator'
     else 'aide'
   end as role,
   case roledef.name
     when 'Lead Teacher' then 'true'
     when 'Co-teacher' then 'false'
+    when 'DESE Co-teacher' then 'false'
+    when 'ESL/SPED Teacher' then 'false'
     when 'Teacher''s Aide' then 'false'
+    when 'Principal' then 'false'
+    when 'School Administrator' then 'false'
     else 'false'
   end as primary,
   to_char(sectionteacher.start_date,'yyyy-mm-dd') as beginDate,
@@ -51,7 +59,6 @@ left join users on schoolstaff.users_dcid = users.dcid
 left join sections on sectionteacher.sectionid = sections.id
 left join schools on users.homeschoolid = schools.school_number
 left join roledef on sectionteacher.roleid = roledef.id
-where roledef.name in ('Lead Teacher','Co-teacher','Teacher''s Aide')
 and sectionteacher.sectionid in 
 (
   select sections.id from sections
