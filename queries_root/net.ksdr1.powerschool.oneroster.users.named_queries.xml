@@ -59,7 +59,6 @@ left join schools on schools.school_number = users.homeschoolid
 where users.homeschoolid = schoolstaff.schoolid
 and schoolstaff.STATUS = 1
 and schoolstaff.staffstatus = 1
-and schools.state_excludefromreporting = 0
 and users.email_addr is not null
 and (users.teacherloginid is not null or users.loginid is not null)
 union all
@@ -102,7 +101,6 @@ left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.s
 left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
 where students.enroll_status = 0
 and psm_studentcontacttype.name = 'Self'
-and schools.STATE_EXCLUDEFROMREPORTING = 0
     ]]></sql>
   </query>
   <!-- Define more queries here -->
