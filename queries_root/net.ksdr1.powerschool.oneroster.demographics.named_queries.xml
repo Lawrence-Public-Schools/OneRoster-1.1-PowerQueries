@@ -85,7 +85,10 @@ union all
 
 select
  'S'||students.dcid as sourcedId,
- 'active' as status,
+ case students.enroll_status 
+    when 0 then 'active'
+    else 'inactive'
+ end as status,
  null as dateLastModified,
  to_char(students.dob,'YYYY-MM-DD') as birthDate,
  case upper(students.gender)
@@ -129,15 +132,13 @@ from students
 left join (
 select students.id, (listagg(studentrace.racecd,',') within group (order by studentrace.racecd)) racecomma from students 
   left join studentrace on students.id = studentrace.studentid
-  where students.enroll_status = 0
   group by students.id
   ) s_race_query on s_race_query.id = students.id
 left join schools on students.schoolid = schools.school_number
 left join sync_studentmap on students.dcid = sync_studentmap.studentsdcid
 left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid
 left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
-where students.enroll_status = 0
-and psm_studentcontacttype.name = 'Self'
+where psm_studentcontacttype.name = 'Self'
 and schools.STATE_EXCLUDEFROMREPORTING = 0
     ]]></sql>
   </query>
