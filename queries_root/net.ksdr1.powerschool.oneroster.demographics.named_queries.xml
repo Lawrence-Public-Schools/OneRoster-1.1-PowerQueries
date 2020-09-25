@@ -144,7 +144,6 @@ left join sync_studentmap on students.dcid = sync_studentmap.studentsdcid
 left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid
 left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
 where psm_studentcontacttype.name = 'Self'
-and schools.STATE_EXCLUDEFROMREPORTING = 0
     ]]></sql>
   </query>
   <!-- Define more queries here -->
