@@ -23,15 +23,16 @@ from dual)
 union all
 (select
   cast(schools.school_number as varchar2(10)) as sourcedId,
-  'active' as status,
+  case schools.state_excludefromreporting
+    when 0 then 'active'
+    else 'inactive'
+  end as status,
   null as dateLastModified,
   schools.name as name,
   'school' as type,
   null as identifier,
   cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10)) as parentSourcedId
 from schools
-where
-  schools.state_excludefromreporting = 0
 )
     ]]></sql>
   </query>
