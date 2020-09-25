@@ -57,8 +57,6 @@ from users
 left join schoolstaff on users.dcid = schoolstaff.users_dcid
 left join schools on schools.school_number = users.homeschoolid
 where users.homeschoolid = schoolstaff.schoolid
-and schoolstaff.STATUS = 1
-and schoolstaff.staffstatus = 1
 and users.email_addr is not null
 and (users.teacherloginid is not null or users.loginid is not null)
 union all
