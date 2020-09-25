@@ -58,9 +58,6 @@ and sectionteacher.sectionid in
   left join yearquery on 1=1
   where sections.termid between yearquery.id and yearquery.id+99
 )
-and schoolstaff.status = 1
-and schoolstaff.staffstatus = 1
-and schools.state_excludefromreporting = 0
 and (users.teacherloginid is not null or users.loginid is not null)
 union all
 
