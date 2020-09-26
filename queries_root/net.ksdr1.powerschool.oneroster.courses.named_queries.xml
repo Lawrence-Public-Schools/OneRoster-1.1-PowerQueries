@@ -48,7 +48,7 @@ schcourses as (
 )
 select
   distinct coursedcid as sourcedId,
-  'active' as status,
+  null as status,
   null as dateLastModified,
   y.id as schoolYearSourcedId,
   course_name as title,
