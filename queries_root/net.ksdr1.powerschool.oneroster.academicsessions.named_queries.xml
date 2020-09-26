@@ -15,7 +15,7 @@
     <sql><![CDATA[
 with yearquery as (select 
   id as sourcedId,
-  'active' as status,
+  null as status,
   null as dateLastModified,
   name as title,
   'schoolYear' as type,
@@ -33,7 +33,7 @@ order by startDate
 semestersquery as (
 select
   s.id as sourcedId,
-  'active' as status,
+  null as status,
   null as dateLastModified,
   s.name as title,
   'semester' as type,
@@ -57,7 +57,7 @@ order by startDate
 quartersquery as (
 select
   q.id as sourcedId,
-  'active' as status,
+  null as status,
   null as dateLastModified,
   q.name as title,
   'gradingPeriod' as type,
@@ -87,7 +87,7 @@ order by startDate
 eighthsquery as (
 select
   e.id as sourcedId,
-  'active' as status,
+  null as status,
   null as dateLastModified,
   e.name as title,
   'gradingPeriod' as type,
