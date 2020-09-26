@@ -25,10 +25,7 @@
 -- teachers
 select 
   'T'||users.dcid as sourcedId,
-  case schoolstaff.status 
-    when 1 then 'active'
-    else 'inactive'
-  end as status,
+  null as status,
   null as dateLastModified,
   case schoolstaff.status
     when 1 then 'true'
@@ -69,10 +66,7 @@ union all
 -- students
 select
   'S'||students.dcid as sourcedId,
-  case students.enroll_status 
-    when 0 then 'active'
-    else 'inactive'
-  end as status,
+  null as status,
   null as dateLastModified,
   case students.enroll_status
     when 0 then 'true'
