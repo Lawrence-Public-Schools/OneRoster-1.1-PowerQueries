@@ -22,15 +22,13 @@ with yearquery as (select
   id, abbreviation
 from terms
 where portion = 1
-  AND sysdate BETWEEN firstday-30 and lastday+30
+  AND terms.lastday > sysdate
+  AND sysdate > terms.firstday-30
   AND schoolid=0
 )
 select
   sections.id as sourcedId,
-  case 
-    when sections.Exclude_State_Rpt_YN = 0 then 'active'
-    else 'inactive'
-  end as status,
+  null as status,
   null as dateLastModified,
   case
     when yearquery.id = sections.termid then yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number

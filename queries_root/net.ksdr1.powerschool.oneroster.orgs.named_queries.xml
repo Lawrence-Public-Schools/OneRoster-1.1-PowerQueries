@@ -13,7 +13,7 @@
     <sql><![CDATA[
 (select
   cast ((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10)) as sourcedId,
-  'active' as status,
+  null as status,
   null as dateLastModified,
   cast ((select prefs.value from prefs where prefs.name = 'districtname') as varchar2(50)) as name,
   'district' as type,
@@ -23,10 +23,7 @@ from dual)
 union all
 (select
   cast(schools.school_number as varchar2(10)) as sourcedId,
-  case schools.state_excludefromreporting
-    when 0 then 'active'
-    else 'inactive'
-  end as status,
+  null as status,
   null as dateLastModified,
   schools.name as name,
   'school' as type,

@@ -15,7 +15,7 @@
     <sql><![CDATA[
 with yearquery as (select 
   id as sourcedId,
-  'active' as status,
+  null as status,
   null as dateLastModified,
   name as title,
   'schoolYear' as type,
@@ -25,14 +25,15 @@ with yearquery as (select
   to_char(lastday,'yyyy') as schoolYear
 from terms
 where portion = 1
-  AND sysdate BETWEEN firstday-30 and lastday+30
+  AND terms.lastday > sysdate
+  AND sysdate > terms.firstday-30
   AND schoolid=0
 order by startDate
 ),
 semestersquery as (
 select
   s.id as sourcedId,
-  'active' as status,
+  null as status,
   null as dateLastModified,
   s.name as title,
   'semester' as type,
@@ -56,7 +57,7 @@ order by startDate
 quartersquery as (
 select
   q.id as sourcedId,
-  'active' as status,
+  null as status,
   null as dateLastModified,
   q.name as title,
   'gradingPeriod' as type,
@@ -80,6 +81,42 @@ where q.portion = 4
   AND q.schoolid = 0
   and y.schoolid = 0
   AND q.yearid = (select sourcedid/100 from yearquery)
+order by startDate
+)
+,
+eighthsquery as (
+select
+  e.id as sourcedId,
+  null as status,
+  null as dateLastModified,
+  e.name as title,
+  'gradingPeriod' as type,
+  to_char(e.firstday,'yyyy-mm-dd') as startDate,
+  to_char(e.lastday,'yyyy-mm-dd') as endDate,
+  q.id as parentSourcedId,
+  to_char(y.lastday,'yyyy') as schoolYear
+from terms e
+left join terms q on (
+  e.firstday between q.firstday and q.lastday
+  and q.portion = 4
+  and e.portion = 8
+)
+left join terms s on (
+  e.firstday between s.firstday and s.lastday
+  and s.portion = 2
+  and e.portion = 8
+)
+left join terms y on (
+  e.firstday between y.firstday and y.lastday
+  and e.portion = 8
+  and y.portion = 1
+)
+where e.portion = 8
+  AND s.schoolid = 0
+  AND q.schoolid = 0
+  and y.schoolid = 0
+  and e.schoolid = 0
+  AND e.yearid = (select sourcedid/100 from yearquery)
 order by startDate
 )
 select
@@ -117,6 +154,18 @@ select
   parentsourcedid,
   schoolyear
 from quartersquery
+union all
+select
+  sourcedid,
+  status,
+  datelastmodified,
+  title,
+  type,
+  startdate,
+  enddate,
+  parentsourcedid,
+  schoolyear
+from eighthsquery
     ]]></sql>
   </query>
   <!-- Define more queries here -->
