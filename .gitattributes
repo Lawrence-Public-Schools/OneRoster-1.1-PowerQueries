@@ -1,5 +1,8 @@
 # Auto detect text files and perform LF normalization
 * text=auto
-.gitattributes export-ignore
-LICENSE export-ignore
-permissions_root/.blank export-ignore
+/.gitattributes export-ignore
+/LICENSE export-ignore
+/permissions_root/.blank export-ignore
+/.gitignore export-ignore
+/dists export-ignore
+/release.bat export-ignore
