@@ -50,7 +50,7 @@ select
   terms.id as termSourcedIds,
   null as subjects,
   null as subjectCodes,
-  null as periods
+  sections.expression as periods
 from sections
 left join courses on sections.course_number = courses.course_number
 left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
