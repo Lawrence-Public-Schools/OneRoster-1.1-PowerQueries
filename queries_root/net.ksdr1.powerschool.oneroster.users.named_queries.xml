@@ -97,9 +97,10 @@ select
 from students
 left join schools on students.schoolid = schools.school_number
 -- student email join graph
+left join schools on students.schoolid = schools.school_number
 left join sync_studentmap on students.dcid = sync_studentmap.studentsdcid
-left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid and psm_studentcontact.studentcontacttypeid = 1732344
---left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
+left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid
+left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
 -- multi-guardian join graph
 left join studentcontactassoc on students.dcid = studentcontactassoc.studentdcid
 left join guardianpersonassoc on studentcontactassoc.personid = guardianpersonassoc.personID
@@ -107,7 +108,7 @@ left join guardian on guardianpersonassoc.guardianid = guardian.guardianid
 left join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken 
 where students.student_web_id is not null
 and psm_studentcontact.email is not null
---and psm_studentcontacttype.name = 'Self'
+and psm_studentcontacttype.name = 'Self'
 
 group by 'S'||students.dcid, null, null, case students.enroll_status when 0 then 'true' when -1 then 'true' else 'false' end, cast(students.schoolid as varchar2(10)), 
 'student', students.student_web_id, null, students.first_name, students.last_name, 
