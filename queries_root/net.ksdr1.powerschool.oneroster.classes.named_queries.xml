@@ -24,7 +24,6 @@ from terms
 where portion = 1
   AND terms.lastday > sysdate
   AND sysdate > terms.firstday-30
-  AND schoolid=0
 )
 select
   sections.id as sourcedId,
@@ -47,7 +46,7 @@ select
   'scheduled' as classType,
   sections.room as location,
   sections.schoolid as schoolSourcedId,
-  terms.id as termSourcedIds,
+  terms.schoolid || '-' || terms.id as termSourcedIds,
   null as subjects,
   null as subjectCodes,
   sections.expression as periods

@@ -14,7 +14,7 @@
     </columns>
     <sql><![CDATA[
 with yearquery as (select 
-  id as sourcedId,
+  schoolid || '-' || id as sourcedId,
   null as status,
   null as dateLastModified,
   name as title,
@@ -27,19 +27,18 @@ from terms
 where portion = 1
   AND terms.lastday > sysdate
   AND sysdate > terms.firstday-30
-  AND schoolid=0
 order by startDate
 ),
 semestersquery as (
 select
-  s.id as sourcedId,
+  s.schoolid || '-' || s.id as sourcedId,
   null as status,
   null as dateLastModified,
   s.name as title,
   'semester' as type,
   to_char(s.firstday,'yyyy-mm-dd') as startDate,
   to_char(s.lastday,'yyyy-mm-dd') as endDate,
-  y.id as parentSourcedId,
+  s.schoolid || '-' || y.id as parentSourcedId,
   to_char(y.lastday,'yyyy') as schoolYear
 from terms s
 left join terms y on (
@@ -48,22 +47,22 @@ left join terms y on (
   and y.portion = 1
 )
 where s.portion = 2
-  AND s.schoolid = 0
-  AND y.schoolid = 0
-  AND s.yearid = (select sourcedid/100 from yearquery)
+  AND s.schoolid = y.schoolid
+  AND s.lastday > sysdate
+  AND sysdate > s.firstday-30
 order by startDate
 )
 ,
 quartersquery as (
 select
-  q.id as sourcedId,
+  q.schoolid || '-' || q.id as sourcedId,
   null as status,
   null as dateLastModified,
   q.name as title,
   'gradingPeriod' as type,
   to_char(q.firstday,'yyyy-mm-dd') as startDate,
   to_char(q.lastday,'yyyy-mm-dd') as endDate,
-  s.id as parentSourcedId,
+  q.schoolid || '-' || s.id as parentSourcedId,
   to_char(y.lastday,'yyyy') as schoolYear
 from terms q
 left join terms s on (
@@ -77,23 +76,23 @@ left join terms y on (
   and y.portion = 1
 )
 where q.portion = 4
-  AND s.schoolid = 0
-  AND q.schoolid = 0
-  and y.schoolid = 0
-  AND q.yearid = (select sourcedid/100 from yearquery)
+  AND s.schoolid = q.schoolid
+  AND q.schoolid = y.schoolid
+  AND q.lastday > sysdate
+  AND sysdate > q.firstday-30
 order by startDate
 )
 ,
 eighthsquery as (
 select
-  e.id as sourcedId,
+  e.schoolid || '-' || e.id as sourcedId,
   null as status,
   null as dateLastModified,
   e.name as title,
   'gradingPeriod' as type,
   to_char(e.firstday,'yyyy-mm-dd') as startDate,
   to_char(e.lastday,'yyyy-mm-dd') as endDate,
-  q.id as parentSourcedId,
+  e.schoolid || '-' ||q.id as parentSourcedId,
   to_char(y.lastday,'yyyy') as schoolYear
 from terms e
 left join terms q on (
@@ -112,11 +111,11 @@ left join terms y on (
   and y.portion = 1
 )
 where e.portion = 8
-  AND s.schoolid = 0
-  AND q.schoolid = 0
-  and y.schoolid = 0
-  and e.schoolid = 0
-  AND e.yearid = (select sourcedid/100 from yearquery)
+  AND s.schoolid = q.schoolid
+  AND q.schoolid = y.schoolid
+  AND y.schoolid = e.schoolid
+  AND e.lastday > sysdate
+  AND sysdate > e.firstday-30
 order by startDate
 )
 select
