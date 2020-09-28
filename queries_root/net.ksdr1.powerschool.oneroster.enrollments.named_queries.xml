@@ -61,6 +61,7 @@ left join sections on sectionteacher.sectionid = sections.id
 left join schools on users.homeschoolid = schools.school_number
 left join roledef on sectionteacher.roleid = roledef.id
 left join courses on sections.course_number = courses.course_number
+left join yearquery on 1=1
 and sectionteacher.sectionid in 
 (
   select sections.id from sections
@@ -68,6 +69,7 @@ and sectionteacher.sectionid in
   where sections.termid between yearquery.id and yearquery.id+99
 )
 and (users.teacherloginid is not null or users.loginid is not null)
+where sections.termid between yearquery.id and yearquery.id+99
 
 union all
 
