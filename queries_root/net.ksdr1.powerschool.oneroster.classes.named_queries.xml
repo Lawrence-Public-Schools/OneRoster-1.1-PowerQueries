@@ -22,8 +22,8 @@ with yearquery as (select
   id, abbreviation
 from terms
 where portion = 1
-  AND terms.lastday > sysdate
-  AND sysdate > terms.firstday-30
+  AND sysdate BETWEEN firstday-30 and lastday+30
+  AND schoolid=0
 )
 select
   sections.id as sourcedId,
@@ -46,7 +46,7 @@ select
   'scheduled' as classType,
   sections.room as location,
   sections.schoolid as schoolSourcedId,
-  terms.schoolid || '-' || terms.id as termSourcedIds,
+  sections.schoolid || '-' || SECTIONS.TERMID as termSourcedIds,
   null as subjects,
   null as subjectCodes,
   sections.expression as periods
