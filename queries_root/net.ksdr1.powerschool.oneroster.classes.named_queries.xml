@@ -30,7 +30,10 @@ select
   null as status,
   null as dateLastModified,
   case
-    when yearquery.id = sections.termid then yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
+    when SectionTeacher.SectionNickname is not null and yearquery.id = sections.termid then SectionTeacher.SectionNickname || ' | ' || yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
+    when SectionTeacher.SectionNickname is not null and yearquery.id != sections.termid then SectionTeacher.SectionNickname || ' | ' || yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
+    when SectionTeacher.SectionNickname is null and yearquery.id = sections.termid then yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
+    when SectionTeacher.SectionNickname is null and yearquery.id != sections.termid then yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
     else yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
   end as title,
   case 
@@ -54,6 +57,7 @@ from sections
 left join courses on sections.course_number = courses.course_number
 left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
 left join schools on schools.school_number=sections.schoolid
+left join SectionTeacher on SectionTeacher.TeacherID=sections.Teacher and SectionTeacher.SectionID=sections.id
 left join yearquery on 1=1
 left join (SELECT 
     sectionid,
