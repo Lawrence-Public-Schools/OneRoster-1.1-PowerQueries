@@ -1,4 +1,4 @@
-<plugin xmlns="http://plugin.powerschool.pearson.com" name="OneRoster PowerQueries" version="0.22">
+<plugin xmlns="http://plugin.powerschool.pearson.com" name="OneRoster PowerQueries" version="0.23">
 	<publisher name="Lawrence Public Schools">
 		<contact email="thewizard@lawrence.k12.ma.us" />
 	</publisher>
