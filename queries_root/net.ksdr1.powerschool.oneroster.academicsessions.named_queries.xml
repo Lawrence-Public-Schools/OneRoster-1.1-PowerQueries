@@ -25,7 +25,7 @@ with yearquery as (select
   to_char(lastday,'yyyy') as schoolYear
 from terms
 where portion = 1
-  AND terms.lastday > sysdate
+  /*AND terms.lastday > sysdate*/
   AND sysdate > terms.firstday-30
 order by startDate
 ),
@@ -48,7 +48,7 @@ left join terms y on (
 )
 where s.portion = 2
   AND s.schoolid = y.schoolid
-  AND s.lastday > sysdate
+  /*AND s.lastday > sysdate*/
   AND sysdate > s.firstday-30
 order by startDate
 )
@@ -78,7 +78,7 @@ left join terms y on (
 where q.portion = 4
   AND s.schoolid = q.schoolid
   AND q.schoolid = y.schoolid
-  AND q.lastday > sysdate
+  /*AND q.lastday > sysdate*/
   AND sysdate > q.firstday-30
 order by startDate
 )
@@ -114,7 +114,7 @@ where e.portion = 8
   AND s.schoolid = q.schoolid
   AND q.schoolid = y.schoolid
   AND y.schoolid = e.schoolid
-  AND e.lastday > sysdate
+  /*AND e.lastday > sysdate*/
   AND sysdate > e.firstday-30
 order by startDate
 )
