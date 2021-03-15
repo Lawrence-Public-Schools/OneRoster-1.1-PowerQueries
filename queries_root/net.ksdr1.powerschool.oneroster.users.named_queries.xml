@@ -27,19 +27,10 @@ select
   'T'||users.dcid as sourcedId,
   null as status,
   null as dateLastModified,
-  case schoolstaff.status
-    when 1 then 'true'
-    else 'false'
-  end as enabledUser,
-  case cast(users.homeschoolid as varchar2(10))
-    when '0' then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
-    else cast(users.homeschoolid as varchar2(10))
-  end as orgSourcedIds,
+  'true' as enabledUser,
+  LISTAGG(schoolstaff.SchoolID, ', ') WITHIN GROUP (ORDER BY schoolstaff.SchoolID) as orgSourcedIds,
   'teacher' as role,
-  case 
-    when users.teacherloginid is not null then users.teacherloginid
-    else users.loginid
-  end as username,
+  users.teacherloginid as username,
   null as userIds,
   users.first_name as givenName,
   users.last_name as familyName,
@@ -52,11 +43,11 @@ select
   null as grades,
   null as password
 from users
-left join schoolstaff on users.dcid = schoolstaff.users_dcid
-left join schools on schools.school_number = users.homeschoolid
-where users.homeschoolid = schoolstaff.schoolid
+join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1
+where users.teacherloginid is not null
 and users.email_addr is not null
-and (users.teacherloginid is not null or users.loginid is not null)
+group by 'T'||users.dcid, null, null, case schoolstaff.status when 1 then 'true' else 'false' end , 'teacher', users.teacherloginid,
+null, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
 
 union all
 
