@@ -55,7 +55,7 @@ select
   null as grades,
   null as password
 from users
-join orgSource on orgSource.dcid = users.dcid
+join (select * from orgSource) orgSource on orgSource.dcid = users.dcid
 join schoolstaff on schoolstaff.users_dcid = users.dcid
 where users.homeschoolid = schoolstaff.schoolid
 and users.email_addr is not null
