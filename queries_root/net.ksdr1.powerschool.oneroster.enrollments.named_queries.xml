@@ -70,6 +70,7 @@ and sectionteacher.sectionid in
 )
 and (users.teacherloginid is not null or users.loginid is not null)
 where sections.termid between yearquery.id and yearquery.id+99
+and schoolstaff.status = 1
 
 union all
 
