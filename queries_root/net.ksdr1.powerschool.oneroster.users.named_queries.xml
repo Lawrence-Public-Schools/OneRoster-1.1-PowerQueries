@@ -29,7 +29,7 @@ with orgSource as (select
     else cast(schoolstaff.SchoolID as varchar2(10))
 	end as SchoolID
 from users
-join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1
+join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1  and schoolstaff.staffstatus = 1
 )
 -- teachers
 select 
