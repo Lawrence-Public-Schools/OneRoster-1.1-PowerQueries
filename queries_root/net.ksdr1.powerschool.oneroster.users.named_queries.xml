@@ -22,13 +22,22 @@
 	  <column column="USERS.STREET">r_password</column>
     </columns>
     <sql><![CDATA[
+with orgSource as (select 
+  users.dcid as dcid,
+  case cast(schoolstaff.SchoolID as varchar2(10))
+    when '0' then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
+    else cast(schoolstaff.SchoolID as varchar2(10))
+	end as SchoolID
+from users
+join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1
+)
 -- teachers
 select 
   'T'||users.dcid as sourcedId,
   null as status,
   null as dateLastModified,
   'true' as enabledUser,
-  LISTAGG(schoolstaff.SchoolID, ', ') WITHIN GROUP (ORDER BY schoolstaff.SchoolID) as orgSourcedIds,
+  LISTAGG(orgSource.SchoolID, ', ') WITHIN GROUP (ORDER BY orgSource.SchoolID) as orgSourcedIds,
   'teacher' as role,
   users.teacherloginid as username,
   null as userIds,
@@ -43,9 +52,11 @@ select
   null as grades,
   null as password
 from users
+join orgSource on orgSource.dcid = users.dcid
 join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1
-where users.teacherloginid is not null
+where users.homeschoolid = schoolstaff.schoolid
 and users.email_addr is not null
+and users.teacherloginid is not null
 group by 'T'||users.dcid, null, null, case schoolstaff.status when 1 then 'true' else 'false' end , 'teacher', users.teacherloginid,
 null, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
 
