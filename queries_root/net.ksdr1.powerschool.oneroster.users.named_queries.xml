@@ -36,7 +36,10 @@ select
   'T'||users.dcid as sourcedId,
   null as status,
   null as dateLastModified,
-  'true' as enabledUser,
+  case schoolstaff.status
+    when 1 then 'true'
+    else 'false'
+  end as enabledUser,
   LISTAGG(orgSource.SchoolID, ', ') WITHIN GROUP (ORDER BY orgSource.SchoolID) as orgSourcedIds,
   'teacher' as role,
   users.teacherloginid as username,
@@ -53,7 +56,7 @@ select
   null as password
 from users
 join orgSource on orgSource.dcid = users.dcid
-join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1
+join schoolstaff on schoolstaff.users_dcid = users.dcid
 where users.homeschoolid = schoolstaff.schoolid
 and users.email_addr is not null
 and users.teacherloginid is not null
