@@ -62,6 +62,12 @@ left join schools on users.homeschoolid = schools.school_number
 left join roledef on sectionteacher.roleid = roledef.id
 left join courses on sections.course_number = courses.course_number
 left join yearquery on 1=1
+join (SELECT 
+    sectionid,
+    COUNT(sectionid) as NO_OF_STUDENTS
+    from cc
+    GROUP BY sectionid
+    ) q ON sections.id = q.sectionid
 and sectionteacher.sectionid in 
 (
   select sections.id from sections
