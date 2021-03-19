@@ -40,7 +40,7 @@ select
     when 1 then 'true'
     else 'false'
   end as enabledUser,
-  LISTAGG(orgSource.SchoolID, ', ') WITHIN GROUP (ORDER BY orgSource.SchoolID) as orgSourcedIds,
+  LISTAGG(orgSource.SchoolID, ',') WITHIN GROUP (ORDER BY orgSource.SchoolID) as orgSourcedIds,
   'teacher' as role,
   users.teacherloginid as username,
   null as userIds,
