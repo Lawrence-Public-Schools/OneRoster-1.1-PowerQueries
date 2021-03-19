@@ -59,7 +59,7 @@ left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
 left join schools on schools.school_number=sections.schoolid
 left join SectionTeacher on SectionTeacher.TeacherID=sections.Teacher and SectionTeacher.SectionID=sections.id and SectionTeacher.SectionNickname is not null
 left join yearquery on 1=1
-left join (SELECT 
+join (SELECT 
     sectionid,
     COUNT(sectionid) as NO_OF_STUDENTS
     from cc
