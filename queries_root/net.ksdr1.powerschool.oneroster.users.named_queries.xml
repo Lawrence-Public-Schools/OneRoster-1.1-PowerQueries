@@ -38,7 +38,7 @@ orgSourceh as (select
     else cast(schoolstaff.SchoolID as varchar2(10))
 	end as SchoolID
 from users
-join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1  and schoolstaff.staffstatus = 1 and schoolstaff.schoolid =  users.homeschoolid
+join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.schoolid =  users.homeschoolid
 )
 -- teachers
 select 
