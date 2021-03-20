@@ -150,7 +150,7 @@ select
     when 1 then 'true'
     else 'false'
   end as enabledUser,
-  '2195' as orgSourcedIds,
+  cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10)) as orgSourcedIds,
   'guardian' as role,
   pcas_account.username as username,
   null as userIds,
