@@ -27,7 +27,7 @@ with orgSource as (select
   case cast(schoolstaff.SchoolID as varchar2(10))
     when '0' then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
     else cast(schoolstaff.SchoolID as varchar2(10))
-	end as SchoolID
+  end as SchoolID
 from users
 join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1  and schoolstaff.staffstatus = 1 and schoolstaff.schoolid !=  users.homeschoolid
 ),
@@ -36,7 +36,7 @@ orgSourceh as (select
   case cast(schoolstaff.SchoolID as varchar2(10))
     when '0' then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
     else cast(schoolstaff.SchoolID as varchar2(10))
-	end as SchoolID
+  end as SchoolID
 from users
 join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.schoolid = users.homeschoolid
 )
@@ -57,7 +57,8 @@ select
   end as orgSourcedIds,
   'teacher' as role,
   case 
-    when users.teacherloginid is not null then users.teacherloginid
+    when users.teacherloginid is not null
+	then users.teacherloginid
     else users.loginid
   end as username,
   null as userIds,
@@ -105,8 +106,10 @@ select
   students.home_phone as phone,
   -- listagg() creates comma-separated aggregate list for all linked guardian contacts, then replace() removes those that don't have a PCAS account
   case 
-    when (replace(listagg('G'||guardian.guardianid,',') within group (ORDER BY students.student_number),'G,','')) = 'G' then null 
-    else (replace(listagg('G'||guardian.guardianid,',') within group (ORDER BY students.student_number),'G,','')) end as agentSourcedIds,
+    when (replace(listagg('G'||guardian.guardianid,',') within group (ORDER BY students.student_number),'G,','')) = 'G' 
+	then null 
+    else (replace(listagg('G'||guardian.guardianid,',') within group (ORDER BY students.student_number),'G,',''))
+  end as agentSourcedIds,
   case 
     when students.grade_level <= -3 then 'IT'
     when students.grade_level between -2 and -1 then 'PK'
@@ -160,7 +163,8 @@ select
   null as phone,
   case 
     when (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,','')) = 'S' then null 
-    else (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,','')) end as agentSourcedIds,
+    else (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,',''))
+  end as agentSourcedIds,
   null as grades,
   null as password
 from guardian
