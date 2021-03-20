@@ -101,7 +101,7 @@ left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.s
 left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
 left join courses on cc.course_number = courses.course_number
 join sections on cc.sectionid = sections.id
-join teachers t on sections.teacher=t.id and t.ptaccess = 1 and t.status =1
+join teachers t on sections.teacher=t.id and t.ptaccess = 1 and t.status =1 and t.StaffStatus =1
 where students.enroll_status = 0
 and psm_studentcontacttype.name = 'Self'
 and schools.STATE_EXCLUDEFROMREPORTING = 0
