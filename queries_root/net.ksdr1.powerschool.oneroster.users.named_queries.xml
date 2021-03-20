@@ -29,7 +29,7 @@ with orgSource as (select
     else cast(schoolstaff.SchoolID as varchar2(10))
 	end as SchoolID
 from users
-join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1  and schoolstaff.staffstatus = 1
+join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status = 1  and schoolstaff.staffstatus = 1 and schoolstaff.schoolid !=  users.homeschoolid
 )
 -- teachers
 select 
@@ -40,7 +40,11 @@ select
     when 1 then 'true'
     else 'false'
   end as enabledUser,
-  LISTAGG(orgSource.SchoolID, ',') WITHIN GROUP (ORDER BY orgSource.SchoolID) as orgSourcedIds,
+  case 
+     when (LISTAGG(orgSource.SchoolID, ',') WITHIN GROUP (ORDER BY orgSource.SchoolID)) is null 
+     then cast(users.homeschoolid as varchar2(10))
+     else users.homeschoolid||','||(LISTAGG(orgSource.SchoolID, ',') WITHIN GROUP (ORDER BY orgSource.SchoolID))
+  end as orgSourcedIds,
   'teacher' as role,
   users.teacherloginid as username,
   null as userIds,
@@ -58,7 +62,7 @@ from users
 left join (select * from orgSource) orgSource on orgSource.dcid = users.dcid
 join schoolstaff on schoolstaff.users_dcid = users.dcid
 where users.homeschoolid = schoolstaff.schoolid
-group by 'T'||users.dcid, null, null, case schoolstaff.staffstatus when 1 then 'true' else 'false' end , 'teacher', users.teacherloginid,
+group by 'T'||users.dcid, null, null, case schoolstaff.staffstatus when 1 then 'true' else 'false' end , users.homeschoolid, 'teacher', users.teacherloginid,
 null, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
 
 union all
