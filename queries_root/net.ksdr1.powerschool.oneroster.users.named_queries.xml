@@ -57,8 +57,7 @@ select
   end as orgSourcedIds,
   'teacher' as role,
   case 
-    when users.teacherloginid is not null
-	then users.teacherloginid
+    when users.teacherloginid is not null then users.teacherloginid
     else users.loginid
   end as username,
   null as userIds,
@@ -80,6 +79,7 @@ where users.homeschoolid = schoolstaff.schoolid
 and (users.teacherloginid is not null or users.loginid is not null)
 group by 'T'||users.dcid, null, null, case when BITAND(schoolstaff.status,schoolstaff.staffstatus)+0 = 1 then 'true' else 'false' end , orgSourceh.SchoolID, 'teacher', case when users.teacherloginid is not null then users.teacherloginid else users.loginid end,
 null, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
+
 union all
 
 -- students
