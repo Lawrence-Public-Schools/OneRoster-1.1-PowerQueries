@@ -183,7 +183,7 @@ left join students on students.DCID = studentcontactassoc.studentdcid
 where guardianpersonassoc.PersonID is not null
 group by 'G'||guardian.guardianid, null, null, case PCAS_ACCOUNT.ISENABLED when 1 then 'true' else 'false' end, '2195', 
 'guardian', pcas_account.username, null, guardian.firstname, guardian.lastname, guardian.middlename,
-cast(guardianpersonassoc.PersonID as varchar2(10)), null, pcas_emailcontact.emailaddress, null, null, 
+cast(guardianpersonassoc.PersonID as varchar2(10)), pcas_emailcontact.emailaddress, null, null, 
 null, null
 
     ]]></sql>
