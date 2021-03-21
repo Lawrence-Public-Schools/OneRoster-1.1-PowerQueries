@@ -25,7 +25,8 @@
 with orgSource as (select 
   users.dcid as dcid,
   case cast(schoolstaff.SchoolID as varchar2(10))
-    when '0' then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
+    when '0'
+	then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
     else cast(schoolstaff.SchoolID as varchar2(10))
   end as SchoolID
 from users
@@ -34,7 +35,8 @@ join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.status =
 orgSourceh as (select 
   users.dcid as dcid,
   case cast(schoolstaff.SchoolID as varchar2(10))
-    when '0' then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
+    when '0'
+	then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
     else cast(schoolstaff.SchoolID as varchar2(10))
   end as SchoolID
 from users
@@ -162,7 +164,8 @@ select
   null as sms,
   null as phone,
   case 
-    when (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,','')) = 'S' then null 
+    when (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,','')) = 'S' 
+	then null 
     else (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,',''))
   end as agentSourcedIds,
   null as grades,
