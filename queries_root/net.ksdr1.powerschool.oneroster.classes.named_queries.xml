@@ -58,7 +58,7 @@ left join courses on sections.course_number = courses.course_number
 left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
 left join schools on schools.school_number=sections.schoolid
 left join SectionTeacher on SectionTeacher.TeacherID=sections.Teacher and SectionTeacher.SectionID=sections.id and SectionTeacher.SectionNickname is not null
-join teachers t on sections.teacher=t.id and t.ptaccess = 1 and t.status =1 and t.StaffStatus =1
+join teachers t on sections.teacher=t.id and t.ptaccess = 1 and t.status = 1 and t.StaffStatus = 1
 left join yearquery on 1=1
 join (SELECT 
     sectionid,
