@@ -163,7 +163,7 @@ select
   guardian.firstname as givenName,
   guardian.lastname as familyName,
   guardian.middlename as middleName,
-  guardianpersonassoc.PersonID as identifier,
+  cast(guardianpersonassoc.PersonID as varchar2(10)) as identifier,
   pcas_emailcontact.emailaddress as email,
   null as sms,
   null as phone,
@@ -183,7 +183,7 @@ left join students on students.DCID = studentcontactassoc.studentdcid
 where guardianpersonassoc.PersonID is not null
 group by 'G'||guardian.guardianid, null, null, case PCAS_ACCOUNT.ISENABLED when 1 then 'true' else 'false' end, '2195', 
 'guardian', pcas_account.username, null, guardian.firstname, guardian.lastname, guardian.middlename,
-guardianpersonassoc.PersonID, null, pcas_emailcontact.emailaddress, null, null, 
+cast(guardianpersonassoc.PersonID as varchar2(10)), null, pcas_emailcontact.emailaddress, null, null, 
 null, null
 
     ]]></sql>
