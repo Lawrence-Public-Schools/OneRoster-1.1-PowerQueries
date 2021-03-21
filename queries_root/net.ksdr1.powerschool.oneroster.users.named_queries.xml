@@ -162,7 +162,7 @@ select
   null as userIds,
   guardian.firstname as givenName,
   guardian.lastname as familyName,
-  null as middleName,
+  guardian.middlename as middleName,
   null as identifier,
   pcas_emailcontact.emailaddress as email,
   null as sms,
@@ -181,7 +181,7 @@ join guardianpersonassoc on guardian.guardianid = guardianpersonassoc.guardianid
 left join studentcontactassoc on guardianpersonassoc.personID = studentcontactassoc.personID 
 left join students on students.DCID = studentcontactassoc.studentdcid
 group by 'G'||guardian.guardianid, null, null, case PCAS_ACCOUNT.ISENABLED when 1 then 'true' else 'false' end, '2195', 
-'guardian', pcas_account.username, null, guardian.firstname, guardian.lastname, 
+'guardian', pcas_account.username, null, guardian.firstname, guardian.lastname, guardian.middlename,
 null, null, pcas_emailcontact.emailaddress, null, null, 
 null, null
 
