@@ -176,10 +176,11 @@ select
   null as password
 from guardian
 join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken
-join pcas_emailcontact on pcas_account.pcas_accountID = pcas_emailcontact.pcas_accountid
-join guardianpersonassoc on guardian.guardianid = guardianpersonassoc.guardianid
+left join pcas_emailcontact on pcas_account.pcas_accountID = pcas_emailcontact.pcas_accountid
+left join guardianpersonassoc on guardian.guardianid = guardianpersonassoc.guardianid
 left join studentcontactassoc on guardianpersonassoc.personID = studentcontactassoc.personID 
 left join students on students.DCID = studentcontactassoc.studentdcid
+where guardianpersonassoc.PersonID is not null
 group by 'G'||guardian.guardianid, null, null, case PCAS_ACCOUNT.ISENABLED when 1 then 'true' else 'false' end, '2195', 
 'guardian', pcas_account.username, null, guardian.firstname, guardian.lastname, guardian.middlename,
 guardianpersonassoc.PersonID, null, pcas_emailcontact.emailaddress, null, null, 
