@@ -138,7 +138,7 @@ select
 from students
 join schools on students.schoolid = schools.school_number
 -- student email join graph
-left join StudentEmail on StudentEmail.dcid = students.dcid
+left join (select * from StudentEmail) StudentEmail on StudentEmail.dcid = students.dcid
 -- multi-guardian join graph
 left join studentcontactassoc on students.dcid = studentcontactassoc.studentdcid
 left join guardianpersonassoc on studentcontactassoc.personid = guardianpersonassoc.personID
