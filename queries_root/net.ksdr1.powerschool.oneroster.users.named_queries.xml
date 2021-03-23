@@ -41,6 +41,14 @@ orgSourceh as (select
   end as SchoolID
 from users
 join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.schoolid = users.homeschoolid
+),
+StudentEmail as (select
+  psc.email as email,
+  stu.dcid as dcid
+from PSM_STudentcontact psc
+join psm_studentcontacttype psct on psc.studentcontacttypeid = psct.id and psct.name = 'Self'
+join sync_studentmap ssm on psc.studentid = ssm.studentid
+join students stu on ssm.studentsdcid = stu.dcid
 )
 -- teachers
 select 
@@ -81,7 +89,7 @@ join (select * from orgSourceh) orgSourceh on orgSourceh.dcid = users.dcid
 left join (select * from orgSource) orgSource on orgSource.dcid = users.dcid
 join schoolstaff on schoolstaff.users_dcid = users.dcid
 where users.homeschoolid = schoolstaff.schoolid
-group by 'T'||users.dcid, null, null, case when BITAND(schoolstaff.status,schoolstaff.staffstatus)+0 = 1 then 'true' else 'false' end , orgSourceh.SchoolID,
+group by 'T'||users.dcid, null, null, case when BITAND(schoolstaff.status,schoolstaff.staffstatus)+0 = 1 then 'true' else 'false' end, orgSourceh.SchoolID,
 'teacher', case when users.teacherloginid is not null then users.teacherloginid when users.loginid is not null then users.loginid else 'T'||users.dcid end,
 null, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
 
@@ -109,7 +117,7 @@ select
   students.last_name as familyName,
   substr(students.middle_name,0,1) as middleName,
   to_char(students.student_number) as identifier,
-  psm_studentcontact.email as email,
+  StudentEmail.email as email,
   null as sms,
   students.home_phone as phone,
   -- listagg() creates comma-separated aggregate list for all linked guardian contacts, then replace() removes those that don't have a PCAS account
@@ -128,22 +136,18 @@ select
   end as grades,
   null as password
 from students
-left join schools on students.schoolid = schools.school_number
+join schools on students.schoolid = schools.school_number
 -- student email join graph
-left join schools on students.schoolid = schools.school_number
-left join sync_studentmap on students.dcid = sync_studentmap.studentsdcid
-left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid
-left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
+left join StudentEmail on StudentEmail.dcid = students.dcid
 -- multi-guardian join graph
 left join studentcontactassoc on students.dcid = studentcontactassoc.studentdcid
 left join guardianpersonassoc on studentcontactassoc.personid = guardianpersonassoc.personID
 left join guardian on guardianpersonassoc.guardianid = guardian.guardianid
 left join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken 
-where (psm_studentcontacttype.name = 'Self' or psm_studentcontacttype.name is null)
 
 group by 'S'||students.dcid, null, null, case students.enroll_status when 0 then 'true' when -1 then 'true' else 'false' end, cast(students.schoolid as varchar2(10)), 
 'student', case when students.student_web_id is not null then students.student_web_id else 'S'||students.dcid end, null, students.first_name, students.last_name, 
-substr(students.middle_name,0,1), to_char(students.student_number),psm_studentcontact.email, null, students.home_phone, 
+substr(students.middle_name,0,1), to_char(students.student_number),StudentEmail.email, null, students.home_phone, 
 case when students.grade_level <= -3 then 'IT' when students.grade_level between -2 and -1 then 'PK' when students.grade_level = 0 then 'KG' when students.grade_level between 1 and 12 then trim(to_char(students.grade_level,'00')) when students.grade_level > 12 then 'PS' else 'Other' end, null
 
 union all
