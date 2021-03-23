@@ -26,7 +26,7 @@ with orgSource as (select
   users.dcid as dcid,
   case cast(schoolstaff.SchoolID as varchar2(10))
     when '0'
-	then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
+    then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
     else cast(schoolstaff.SchoolID as varchar2(10))
   end as SchoolID
 from users
@@ -36,7 +36,7 @@ orgSourceh as (select
   users.dcid as dcid,
   case cast(schoolstaff.SchoolID as varchar2(10))
     when '0'
-	then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
+    then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
     else cast(schoolstaff.SchoolID as varchar2(10))
   end as SchoolID
 from users
@@ -109,7 +109,7 @@ select
   -- listagg() creates comma-separated aggregate list for all linked guardian contacts, then replace() removes those that don't have a PCAS account
   case 
     when (replace(listagg('G'||guardian.guardianid,',') within group (ORDER BY students.student_number),'G,','')) = 'G' 
-	then null 
+    then null 
     else (replace(listagg('G'||guardian.guardianid,',') within group (ORDER BY students.student_number),'G,',''))
   end as agentSourcedIds,
   case 
@@ -169,7 +169,7 @@ select
   null as phone,
   case 
     when (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,','')) = 'S' 
-	then null 
+    then null 
     else (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,',''))
   end as agentSourcedIds,
   null as grades,
