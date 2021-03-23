@@ -60,8 +60,10 @@ select
   'teacher' as role,
   case 
     when users.teacherloginid is not null
-	then users.teacherloginid
-    else users.loginid
+    then users.teacherloginid
+    when users.loginid is not null
+    then users.loginid
+    else 'T'||users.dcid
   end as username,
   null as userIds,
   users.first_name as givenName,
@@ -79,8 +81,8 @@ join (select * from orgSourceh) orgSourceh on orgSourceh.dcid = users.dcid
 left join (select * from orgSource) orgSource on orgSource.dcid = users.dcid
 join schoolstaff on schoolstaff.users_dcid = users.dcid
 where users.homeschoolid = schoolstaff.schoolid
-and (users.teacherloginid is not null or users.loginid is not null)
-group by 'T'||users.dcid, null, null, case when BITAND(schoolstaff.status,schoolstaff.staffstatus)+0 = 1 then 'true' else 'false' end , orgSourceh.SchoolID, 'teacher', case when users.teacherloginid is not null then users.teacherloginid else users.loginid end,
+group by 'T'||users.dcid, null, null, case when BITAND(schoolstaff.status,schoolstaff.staffstatus)+0 = 1 then 'true' else 'false' end , orgSourceh.SchoolID,
+'teacher', case when users.teacherloginid is not null then users.teacherloginid when users.loginid is not null then users.loginid else 'T'||users.dcid end,
 null, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
 
 union all
@@ -97,7 +99,11 @@ select
   end as enabledUser,
   cast(students.schoolid as varchar2(10)) as orgSourcedIds,
   'student' as role,
-  students.student_web_id as username,
+  case 
+    when students.student_web_id is not null
+    then students.student_web_id
+    else 'S'||students.dcid
+  end as username,
   null as userIds,
   students.first_name as givenName,
   students.last_name as familyName,
@@ -133,11 +139,10 @@ left join studentcontactassoc on students.dcid = studentcontactassoc.studentdcid
 left join guardianpersonassoc on studentcontactassoc.personid = guardianpersonassoc.personID
 left join guardian on guardianpersonassoc.guardianid = guardian.guardianid
 left join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken 
-where students.student_web_id is not null
-and psm_studentcontacttype.name = 'Self'
+where (psm_studentcontacttype.name = 'Self' or psm_studentcontacttype.name is null)
 
 group by 'S'||students.dcid, null, null, case students.enroll_status when 0 then 'true' when -1 then 'true' else 'false' end, cast(students.schoolid as varchar2(10)), 
-'student', students.student_web_id, null, students.first_name, students.last_name, 
+'student', case when students.student_web_id is not null then students.student_web_id else 'S'||students.dcid end, null, students.first_name, students.last_name, 
 substr(students.middle_name,0,1), to_char(students.student_number),psm_studentcontact.email, null, students.home_phone, 
 case when students.grade_level <= -3 then 'IT' when students.grade_level between -2 and -1 then 'PK' when students.grade_level = 0 then 'KG' when students.grade_level between 1 and 12 then trim(to_char(students.grade_level,'00')) when students.grade_level > 12 then 'PS' else 'Other' end, null
 
