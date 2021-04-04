@@ -130,8 +130,8 @@ select
     when students.grade_level <= -3 then 'IT'
     when students.grade_level between -2 and -1 then 'PK'
     when students.grade_level = 0 then 'KG'
-    when students.grade_level between 1 and 12 then trim(to_char(students.grade_level,'00'))
-    when students.grade_level > 12 then 'PS'
+    when students.grade_level between 1 and 13 then trim(to_char(students.grade_level,'00'))
+    when students.grade_level > 13 then 'PS'
     else 'Other'
   end as grades,
   null as password
@@ -148,7 +148,7 @@ left join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_account
 group by 'S'||students.dcid, null, null, case students.enroll_status when 0 then 'true' when -1 then 'true' else 'false' end, cast(students.schoolid as varchar2(10)), 
 'student', case when students.student_web_id is not null then students.student_web_id else 'S'||students.dcid end, null, students.first_name, students.last_name, 
 substr(students.middle_name,0,1), to_char(students.student_number),StudentEmail.email, null, students.home_phone, 
-case when students.grade_level <= -3 then 'IT' when students.grade_level between -2 and -1 then 'PK' when students.grade_level = 0 then 'KG' when students.grade_level between 1 and 12 then trim(to_char(students.grade_level,'00')) when students.grade_level > 12 then 'PS' else 'Other' end, null
+case when students.grade_level <= -3 then 'IT' when students.grade_level between -2 and -1 then 'PK' when students.grade_level = 0 then 'KG' when students.grade_level between 1 and 13 then trim(to_char(students.grade_level,'00')) when students.grade_level > 13 then 'PS' else 'Other' end, null
 
 union all
 

@@ -40,8 +40,8 @@ select
     when sections.grade_level <= -3 then 'IT'
     when sections.grade_level between -2 and -1 then 'PK'
     when sections.grade_level = 0 then 'KG'
-    when sections.grade_level between 1 and 12 then trim(to_char(sections.grade_level,'00'))
-    when sections.grade_level > 12 then 'PS'
+    when sections.grade_level between 1 and 13 then trim(to_char(sections.grade_level,'00'))
+    when sections.grade_level > 13 then 'PS'
     else 'Other'
   end as grades,
   courses.dcid as courseSourcedId,
