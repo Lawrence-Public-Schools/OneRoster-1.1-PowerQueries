@@ -77,7 +77,7 @@ select
     then users.loginid
     else 'T'||users.dcid
   end as username,
-  '"{Admin Portal Username:' || NVL(teachers.loginId, ' ') || '},{Teacher Portal Username:' || NVL(teachers.teacherLoginId, ' ') || '}"' AS userIds,
+  '{Admin Portal Username:' || NVL(teachers.loginId, ' ') || '},{Teacher Portal Username:' || NVL(teachers.teacherLoginId, ' ') || '}' AS userIds,
   users.first_name as givenName,
   users.last_name as familyName,
   substr(users.middle_name,0,1) as middleName,
@@ -119,7 +119,7 @@ select
     then students.student_web_id
     else 'S'||students.dcid
   end as username,
-  '"{State Student Number:' || NVL(students.state_studentNumber, ' ') || '},{Student Portal Username:' || NVL(students.student_web_id, ' ') || '}"' as userIds,
+  '{State Student Number:' || NVL(students.state_studentNumber, ' ') || '},{Student Portal Username:' || NVL(students.student_web_id, ' ') || '}' as userIds,
   students.first_name as givenName,
   students.last_name as familyName,
   substr(students.middle_name,0,1) as middleName,
@@ -179,7 +179,7 @@ select
     then pcas_emailcontact.emailaddress
     else pcas_account.username
   end as username,
-  '"{Guardian Email address:' || NVL(pcas_emailcontact.emailaddress, ' ') || '},{Guardian Portal Username:' || NVL(pcas_account.username, ' ') || '}"' as userIds,
+  '{Guardian Email address:' || NVL(pcas_emailcontact.emailaddress, ' ') || '},{Guardian Portal Username:' || NVL(pcas_account.username, ' ') || '}' as userIds,
   guardian.firstname as givenName,
   guardian.lastname as familyName,
   guardian.middlename as middleName,
