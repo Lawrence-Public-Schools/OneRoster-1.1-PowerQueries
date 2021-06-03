@@ -77,7 +77,7 @@ select
     then users.loginid
     else 'T'||users.dcid
   end as username,
-  null as userIds,
+  '[{"type":"Admin Portal Username","identifier":"' || NVL(teachers.loginId, ' ') || '"},{"type":"Teacher Portal Username","identifier":"' || NVL(teachers.teacherLoginId, ' ') || '"}]' AS userIds,
   users.first_name as givenName,
   users.last_name as familyName,
   substr(users.middle_name,0,1) as middleName,
@@ -92,10 +92,11 @@ from users
 join (select * from orgSourceh) orgSourceh on orgSourceh.dcid = users.dcid
 left join (select * from orgSource) orgSource on orgSource.dcid = users.dcid
 join schoolstaff on schoolstaff.users_dcid = users.dcid
+left join teachers on teachers.users_dcid = users.dcid AND teachers.schoolId = users.homeSchoolId
 where users.homeschoolid = schoolstaff.schoolid
 group by 'T'||users.dcid, null, null, case when BITAND(schoolstaff.status,schoolstaff.staffstatus)+0 = 1 then 'true' else 'false' end, orgSourceh.SchoolID,
 'teacher', case when users.teacherloginid like '##%' then users.Email_Addr when users.loginid like '##%' then users.Email_Addr when users.teacherloginid is not null then users.teacherloginid when users.loginid is not null then users.loginid else 'T'||users.dcid end,
-null, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
+teachers.loginId, teachers.teacherLoginId, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
 
 union all
 
