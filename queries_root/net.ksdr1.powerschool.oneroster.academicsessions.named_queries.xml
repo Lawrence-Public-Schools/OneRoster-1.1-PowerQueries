@@ -25,10 +25,9 @@ with yearquery as (select
   to_char(lastday,'yyyy') as schoolYear
 from terms
 where portion = 1
-  /*AND terms.lastday > sysdate*/
-  AND sysdate > terms.firstday-30
 order by startDate
-),
+)
+,
 semestersquery as (
 select
   s.schoolid || '-' || s.id as sourcedId,
@@ -48,8 +47,28 @@ left join terms y on (
 )
 where s.portion = 2
   AND s.schoolid = y.schoolid
-  /*AND s.lastday > sysdate*/
-  AND sysdate > s.firstday-30
+order by startDate
+)
+,
+trisemestersquery as (
+select
+  tri.schoolid || '-' || tri.id as sourcedId,
+  null as status,
+  null as dateLastModified,
+  tri.name as title,
+  'semester' as type,
+  to_char(tri.firstday,'yyyy-mm-dd') as startDate,
+  to_char(tri.lastday,'yyyy-mm-dd') as endDate,
+  tri.schoolid || '-' || tri.id as parentSourcedId,
+  to_char(y.lastday,'yyyy') as schoolYear
+from terms tri
+left join terms y on (
+  tri.firstday between y.firstday and y.lastday
+  and tri.portion = 3
+  and y.portion = 1
+)
+where tri.portion = 3
+  AND tri.schoolid = y.schoolid
 order by startDate
 )
 ,
@@ -78,8 +97,6 @@ left join terms y on (
 where q.portion = 4
   AND s.schoolid = q.schoolid
   AND q.schoolid = y.schoolid
-  /*AND q.lastday > sysdate*/
-  AND sysdate > q.firstday-30
 order by startDate
 )
 ,
@@ -114,8 +131,6 @@ where e.portion = 8
   AND s.schoolid = q.schoolid
   AND q.schoolid = y.schoolid
   AND y.schoolid = e.schoolid
-  /*AND e.lastday > sysdate*/
-  AND sysdate > e.firstday-30
 order by startDate
 )
 select
@@ -141,6 +156,18 @@ select
   parentsourcedid,
   schoolyear
 from semestersquery
+union all
+select 
+  sourcedid,
+  status,
+  datelastmodified,
+  title,
+  type,
+  startdate,
+  enddate,
+  parentsourcedid,
+  schoolyear
+from trisemestersquery
 union all
 select
   sourcedid,
