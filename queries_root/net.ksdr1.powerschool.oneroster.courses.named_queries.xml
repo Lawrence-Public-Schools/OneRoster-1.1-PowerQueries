@@ -24,7 +24,7 @@ with orgSource as (select
 from courses
 )
 select
-  orgSource.SchoolID || '-' || c.dcid as sourcedId,
+  c.dcid as sourcedId,
   null as status,
   null as dateLastModified,
   null as schoolYearSourcedId,

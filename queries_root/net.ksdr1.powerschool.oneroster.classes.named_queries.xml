@@ -52,7 +52,7 @@ select
     when sections.grade_level > 13 then 'PS'
     else 'Other'
   end as grades,
-  orgSource.schoolid || '-' || courses.dcid as courseSourcedId,
+  courses.dcid as courseSourcedId,
  null as classCode,
   'scheduled' as classType,
   sections.room as location,
