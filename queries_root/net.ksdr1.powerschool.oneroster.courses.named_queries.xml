@@ -15,7 +15,8 @@
     </columns>
     <sql><![CDATA[
 with yearquery as (select 
-  id
+  id,
+  yearid
 from terms
 where portion = 1
   AND terms.lastday > sysdate
@@ -47,7 +48,7 @@ schcourses as (
           inner join sc on sc.courselist like '%;' || UPPER(c.course_number) || ';%'
 )
 select
-  distinct coursedcid as sourcedId,
+  distinct y.yearid || '-' || coursedcid as sourcedId,
   null as status,
   null as dateLastModified,
   y.id as schoolYearSourcedId,
