@@ -14,53 +14,29 @@
 	  <column column="COURSES.SCHED_SCHEDULETYPECODE">j_subjectCodes</column>
     </columns>
     <sql><![CDATA[
-with yearquery as (select 
-  id,
-  yearid
-from terms
-where portion = 1
-  AND terms.lastday > sysdate
-  AND sysdate > terms.firstday-30
-  AND schoolid=0
-),
-sc as (select 
-					s.dcid,
-					s.school_number schoolid, 
-					';' || UPPER(s.activecrslist) || ';' courselist 
-  				 from schools s),
-schcourses as (
-	select
-		sc.dcid schooldcid, 
-		sc.schoolid, 
-		c.dcid coursedcid, 
-		c.course_number,
-		c.course_name,
-		c.credit_hours,
-		c.code,
-		c.vocational,
-		c.credittype,
-		c.gradescaleid,
-		c.excludefromgpa,
-		c.excludefromclassrank,
-		c.excludefromhonorroll,
-		c.exclude_ada		
-     from courses c
-          inner join sc on sc.courselist like '%;' || UPPER(c.course_number) || ';%'
+with orgSource as (select 
+  courses.dcid as dcid,
+  case cast(courses.SchoolID as varchar2(10))
+    when '0'
+    then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
+    else cast(courses.SchoolID as varchar2(10))
+  end as SchoolID
+from courses
 )
 select
-  y.yearid || '-' || schoolid || '-' || coursedcid as sourcedId,
+  orgSource.SchoolID || '-' || c.dcid as sourcedId,
   null as status,
   null as dateLastModified,
-  y.id as schoolYearSourcedId,
-  course_name as title,
-  course_number as courseCode,
+  null as schoolYearSourcedId,
+  c.course_name as title,
+  c.course_number as courseCode,
   null as grades,
-  schoolid as orgSourcedId,
-  null as subjects,
+  orgSource.SchoolID as orgSourcedId,
+  CASE WHEN c.sched_courseSubjectAreaCode IS NOT NULL THEN ',' || c.sched_courseSubjectAreaCode || ',' ELSE NULL END AS subjects,
   null as subjectCodes
   
-from schcourses
-left join yearquery y on 1=1
+from courses c
+join (select * from orgSource) orgSource on orgSource.dcid = c.dcid
     ]]></sql>
   </query>
   <!-- Define more queries here -->
