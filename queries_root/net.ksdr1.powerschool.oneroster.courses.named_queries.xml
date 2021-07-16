@@ -48,14 +48,14 @@ schcourses as (
           inner join sc on sc.courselist like '%;' || UPPER(c.course_number) || ';%'
 )
 select
-  distinct y.yearid || '-' || coursedcid as sourcedId,
+  y.yearid || '-' || schoolid || '-' || coursedcid as sourcedId,
   null as status,
   null as dateLastModified,
   y.id as schoolYearSourcedId,
   course_name as title,
   course_number as courseCode,
   null as grades,
-  cast ((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10)) as orgSourcedId,
+  schoolid as orgSourcedId,
   null as subjects,
   null as subjectCodes
   

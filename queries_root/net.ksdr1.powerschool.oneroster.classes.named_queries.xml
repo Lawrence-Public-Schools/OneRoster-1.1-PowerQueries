@@ -44,7 +44,7 @@ select
     when sections.grade_level > 13 then 'PS'
     else 'Other'
   end as grades,
-  terms.yearid || '-'|| courses.dcid as courseSourcedId,
+  terms.yearid || '-' || sections.schoolid || '-' || courses.dcid as courseSourcedId,
  null as classCode,
   'scheduled' as classType,
   sections.room as location,
