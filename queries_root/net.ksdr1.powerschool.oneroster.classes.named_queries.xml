@@ -24,7 +24,15 @@ from terms
 where portion = 1
   AND sysdate BETWEEN firstday-30 and lastday+30
   AND schoolid=0
-)
+),
+orgSource as (select 
+  sections.dcid as dcid,
+  case cast(sections.SchoolID as varchar2(10))
+    when '0'
+    then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
+    else cast(sections.SchoolID as varchar2(10))
+  end as SchoolID
+from sections)
 select
   sections.id as sourcedId,
   null as status,
@@ -48,8 +56,8 @@ select
   null as classCode,
   'scheduled' as classType,
   sections.room as location,
-  sections.schoolid as schoolSourcedId,
-  sections.schoolid || '-' || SECTIONS.TERMID as termSourcedIds,
+  orgSource.schoolid as schoolSourcedId,
+  orgSource.schoolid || '-' || SECTIONS.TERMID as termSourcedIds,
   null as subjects,
   null as subjectCodes,
   sections.expression as periods
@@ -60,6 +68,7 @@ left join schools on schools.school_number=sections.schoolid
 left join SectionTeacher on SectionTeacher.TeacherID=sections.Teacher and SectionTeacher.SectionID=sections.id and SectionTeacher.SectionNickname is not null
 join teachers t on sections.teacher=t.id and t.ptaccess = 1 and t.status = 1 and t.StaffStatus = 1
 left join yearquery on 1=1
+join (select * from orgSource) orgSource on orgSource.dcid = sections.dcid
 join (SELECT 
     sectionid,
     COUNT(sectionid) as NO_OF_STUDENTS
