@@ -71,6 +71,10 @@ select
     then users.Email_Addr
     when users.loginid like '##%'
     then users.Email_Addr
+    when users.teacherloginid like '~~%'
+    then users.Email_Addr
+    when users.loginid like '~~%'
+    then users.Email_Addr
     when users.teacherloginid is not null
     then users.teacherloginid
     when users.loginid is not null
@@ -95,7 +99,7 @@ join schoolstaff on schoolstaff.users_dcid = users.dcid
 left join teachers on teachers.users_dcid = users.dcid AND teachers.schoolId = users.homeSchoolId
 where users.homeschoolid = schoolstaff.schoolid
 group by 'T'||users.dcid, null, null, case when BITAND(schoolstaff.status,schoolstaff.staffstatus)+0 = 1 then 'true' else 'false' end, orgSourceh.SchoolID,
-'teacher', case when users.teacherloginid like '##%' then users.Email_Addr when users.loginid like '##%' then users.Email_Addr when users.teacherloginid is not null then users.teacherloginid when users.loginid is not null then users.loginid else 'T'||users.dcid end,
+'teacher', case when users.teacherloginid like '##%' then users.Email_Addr when users.loginid like '##%' then users.Email_Addr when users.teacherloginid like '~~%' then users.Email_Addr when users.loginid like '~~%' then users.Email_Addr when users.teacherloginid is not null then users.teacherloginid when users.loginid is not null then users.loginid else 'T'||users.dcid end,
 teachers.loginId, teachers.teacherLoginId, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
 
 union all
@@ -114,6 +118,8 @@ select
   'student' as role,
   case 
     when students.student_web_id like '##%'
+    then StudentEmail.email
+    when students.student_web_id like '~~%'
     then StudentEmail.email
     when students.student_web_id is not null
     then students.student_web_id
@@ -153,7 +159,7 @@ left join guardian on guardianpersonassoc.guardianid = guardian.guardianid
 left join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken 
 
 group by 'S'||students.dcid, null, null, case students.enroll_status when 0 then 'true' when -1 then 'true' else 'false' end, cast(students.schoolid as varchar2(10)), 
-'student', case when students.student_web_id like '##%' then StudentEmail.email when students.student_web_id is not null then students.student_web_id else 'S'||students.dcid end, null, students.state_studentNumber, students.student_web_id, students.id, students.first_name, students.last_name, 
+'student', case when students.student_web_id like '##%' then StudentEmail.email when students.student_web_id like '~~%' then StudentEmail.email when students.student_web_id is not null then students.student_web_id else 'S'||students.dcid end, null, students.state_studentNumber, students.student_web_id, students.id, students.first_name, students.last_name, 
 substr(students.middle_name,0,1), to_char(students.student_number),StudentEmail.email, null, students.home_phone, 
 case when students.grade_level <= -3 then 'IT' when students.grade_level between -2 and -1 then 'PK' when students.grade_level = 0 then 'KG' when students.grade_level between 1 and 13 then trim(to_char(students.grade_level,'00')) when students.grade_level > 13 then 'PS' else 'Other' end, null
 
