@@ -183,6 +183,8 @@ select
   case 
     when pcas_account.username like '##%'
     then pcas_emailcontact.emailaddress
+    when pcas_account.username like '~~%'
+    then pcas_emailcontact.emailaddress
     else pcas_account.username
   end as username,
   '{Guardian Email address:' || NVL(pcas_emailcontact.emailaddress, ' ') || '},{Guardian Portal Username:' || NVL(pcas_account.username, ' ') || '}' as userIds,
@@ -208,7 +210,7 @@ left join studentcontactassoc on guardianpersonassoc.personID = studentcontactas
 left join students on students.DCID = studentcontactassoc.studentdcid
 where guardianpersonassoc.PersonID is not null
 group by 'G'||guardian.guardianid, null, null, case PCAS_ACCOUNT.ISENABLED when 1 then 'true' else 'false' end, '2195', 
-'guardian', case when pcas_account.username like '##%' then pcas_emailcontact.emailaddress else pcas_account.username end, pcas_emailcontact.emailaddress, pcas_account.username, guardian.firstname, guardian.lastname, guardian.middlename,
+'guardian', case when pcas_account.username like '##%' then pcas_emailcontact.emailaddress when pcas_account.username like '~~%' then pcas_emailcontact.emailaddress else pcas_account.username end, pcas_emailcontact.emailaddress, pcas_account.username, guardian.firstname, guardian.lastname, guardian.middlename,
 cast(guardianpersonassoc.PersonID as varchar2(10)), pcas_emailcontact.emailaddress, null, null, 
 null, null
 
