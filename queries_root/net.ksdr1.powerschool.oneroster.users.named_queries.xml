@@ -22,7 +22,15 @@
 	  <column column="USERS.STREET">r_password</column>
     </columns>
     <sql><![CDATA[
-with TeacherorgSource as (select 
+with yearquery as (select 
+  id, abbreviation
+from terms
+where portion = 1
+  AND terms.lastday > sysdate
+  AND sysdate > terms.firstday-30
+  AND schoolid=0
+),
+TeacherorgSource as (select 
   users.dcid as dcid,
   case cast(schoolstaff.SchoolID as varchar2(10))
     when '0'
@@ -42,6 +50,51 @@ TeacherorgSourceh as (select
 from users
 join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.schoolid = users.homeschoolid
 ),
+TeacherorgSourceGroup as (select 
+  users.dcid,
+  case 
+     when (LISTAGG(TeacherorgSource.SchoolID, ',') WITHIN GROUP (ORDER BY TeacherorgSource.SchoolID)) is null 
+     then cast(TeacherorgSourceh.SchoolID as varchar2(10))
+     else TeacherorgSourceh.SchoolID||','||(LISTAGG(TeacherorgSource.SchoolID, ',') WITHIN GROUP (ORDER BY TeacherorgSource.SchoolID))
+  end as orgSourcedIds
+from users
+join (select * from TeacherorgSourceh) TeacherorgSourceh on TeacherorgSourceh.dcid = users.dcid
+left join (select * from TeacherorgSource) TeacherorgSource on TeacherorgSource.dcid = users.dcid
+join schoolstaff on schoolstaff.users_dcid = users.dcid and schoolstaff.schoolid = users.homeschoolid
+
+group by users.dcid, TeacherorgSourceh.SchoolID
+),
+StudentorgSource as (select distinct
+  students.dcid,
+  cc.schoolid
+from students
+join cc on students.id = cc.studentid
+join yearquery on 1=1
+join sections on cc.sectionid = sections.id
+join teachers t on sections.teacher=t.id and t.ptaccess = 1 and t.status = 1 and t.StaffStatus = 1
+where students.enroll_status = 0
+and cc.schoolid != students.schoolid
+and (cc.termid between yearquery.id and yearquery.id+99)
+and cc.dateleft > cc.dateenrolled
+),
+StudentorgSourceh as (select
+  students.dcid,
+  students.schoolid
+from students
+),
+StudentorgSourceGroup as (select 
+  students.dcid,
+  case 
+     when (LISTAGG(StudentorgSource.SchoolID, ',') WITHIN GROUP (ORDER BY StudentorgSource.SchoolID)) is null 
+     then cast(StudentorgSourceh.SchoolID as varchar2(10))
+     else StudentorgSourceh.SchoolID||','||(LISTAGG(StudentorgSource.SchoolID, ',') WITHIN GROUP (ORDER BY StudentorgSource.SchoolID))
+  end as orgSourcedIds
+from students
+join (select * from StudentorgSourceh) StudentorgSourceh on StudentorgSourceh.dcid = students.dcid
+left join (select * from StudentorgSource) StudentorgSource on StudentorgSource.dcid = students.dcid
+
+group by students.dcid, StudentorgSourceh.SchoolID
+),
 StudentEmail as (select
   psc.email as email,
   stu.dcid as dcid
@@ -49,6 +102,61 @@ from PSM_STudentcontact psc
 join psm_studentcontacttype psct on psc.studentcontacttypeid = psct.id and psct.name = 'Self'
 join sync_studentmap ssm on psc.studentid = ssm.studentid
 join students stu on ssm.studentsdcid = stu.dcid
+),
+studenttoguardian as (select
+  students.dcid,
+  guardian.guardianid
+from students
+join studentcontactassoc on students.dcid = studentcontactassoc.studentdcid
+join guardianpersonassoc on studentcontactassoc.personid = guardianpersonassoc.personID
+join guardian on guardianpersonassoc.guardianid = guardian.guardianid
+join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken
+),
+studenttoguardianGroup as (select
+  students.dcid,
+  -- listagg() creates comma-separated aggregate list for all linked guardian contacts, then replace() removes those that don't have a PCAS account
+  case 
+    when (replace(listagg('G'||studenttoguardian.guardianid,',') within group (ORDER BY students.dcid),'G,','')) = 'G' 
+    then null 
+    else (replace(listagg('G'||studenttoguardian.guardianid,',') within group (ORDER BY students.dcid),'G,',''))
+  end as agentSourcedIds
+from students
+left join (select * from studenttoguardian) studenttoguardian on studenttoguardian.dcid = students.dcid
+Group by students.dcid
+),
+guardiantostudents as (select
+  guardian.guardianid,
+  studentcontactassoc.studentdcid
+from guardian
+join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken
+left join pcas_emailcontact on pcas_account.pcas_accountID = pcas_emailcontact.pcas_accountid
+left join guardianpersonassoc on guardian.guardianid = guardianpersonassoc.guardianid
+left join studentcontactassoc on guardianpersonassoc.personID = studentcontactassoc.personID 
+left join students on students.DCID = studentcontactassoc.studentdcid
+where guardianpersonassoc.PersonID is not null
+),
+guardiantostudentGroup as (select 
+  guardian.guardianid,
+  case 
+    when (replace(listagg('S'||guardiantostudents.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,','')) = 'S' 
+    then null 
+    else (replace(listagg('S'||guardiantostudents.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,',''))
+  end as agentSourcedIds
+from guardian
+left join (select * from guardiantostudents) guardiantostudents on guardiantostudents.guardianid = guardian.guardianid
+group by guardian.guardianid
+),
+guardiantostudentSchool as (select 
+  guardian.guardianid,
+  case 
+    when (listagg(students.schoolid,',') within group (ORDER BY guardian.guardianid)) is null
+    then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
+    else (listagg(students.schoolid,',') within group (ORDER BY guardian.guardianid))
+  end as orgSourcedIds
+from guardian
+join (select * from guardiantostudents) guardiantostudents on guardiantostudents.guardianid = guardian.guardianid
+join students on students.dcid = guardiantostudents.studentdcid
+group by guardian.guardianid
 )
 -- teachers
 select 
@@ -60,11 +168,7 @@ select
     then 'true'
     else 'false'
   end as enabledUser,
-  case 
-     when (LISTAGG(TeacherorgSource.SchoolID, ',') WITHIN GROUP (ORDER BY TeacherorgSource.SchoolID)) is null 
-     then cast(TeacherorgSourceh.SchoolID as varchar2(10))
-     else TeacherorgSourceh.SchoolID||','||(LISTAGG(TeacherorgSource.SchoolID, ',') WITHIN GROUP (ORDER BY TeacherorgSource.SchoolID))
-  end as orgSourcedIds,
+  TeacherorgSourceGroup.orgSourcedIds,
   'teacher' as role,
   case 
     when users.teacherloginid like '##%'
@@ -93,14 +197,10 @@ select
   null as grades,
   null as password
 from users
-join (select * from TeacherorgSourceh) TeacherorgSourceh on TeacherorgSourceh.dcid = users.dcid
-left join (select * from TeacherorgSource) TeacherorgSource on TeacherorgSource.dcid = users.dcid
+left join (select * from TeacherorgSourceGroup) TeacherorgSourceGroup on TeacherorgSourceGroup.dcid = users.dcid
 join schoolstaff on schoolstaff.users_dcid = users.dcid
 left join teachers on teachers.users_dcid = users.dcid AND teachers.schoolId = users.homeSchoolId
 where users.homeschoolid = schoolstaff.schoolid
-group by 'T'||users.dcid, null, null, case when BITAND(schoolstaff.status,schoolstaff.staffstatus)+0 = 1 then 'true' else 'false' end, TeacherorgSourceh.SchoolID,
-'teacher', case when users.teacherloginid like '##%' then users.Email_Addr when users.loginid like '##%' then users.Email_Addr when users.teacherloginid like '~~%' then users.Email_Addr when users.loginid like '~~%' then users.Email_Addr when users.teacherloginid is not null then users.teacherloginid when users.loginid is not null then users.loginid else 'T'||users.dcid end,
-teachers.loginId, teachers.teacherLoginId, users.first_name, users.last_name, substr(users.middle_name,0,1), users.teachernumber, users.email_addr, null, users.home_phone, null, null, null
 
 union all
 
@@ -114,7 +214,7 @@ select
     when -1 then 'true'
     else 'false'
   end as enabledUser,
-  cast(students.schoolid as varchar2(10)) as orgSourcedIds,
+  StudentorgSourceGroup.orgSourcedIds,
   'student' as role,
   case 
     when students.student_web_id like '##%'
@@ -133,12 +233,7 @@ select
   StudentEmail.email as email,
   null as sms,
   students.home_phone as phone,
-  -- listagg() creates comma-separated aggregate list for all linked guardian contacts, then replace() removes those that don't have a PCAS account
-  case 
-    when (replace(listagg('G'||guardian.guardianid,',') within group (ORDER BY students.student_number),'G,','')) = 'G' 
-    then null 
-    else (replace(listagg('G'||guardian.guardianid,',') within group (ORDER BY students.student_number),'G,',''))
-  end as agentSourcedIds,
+  studenttoguardianGroup.agentSourcedIds,
   case 
     when students.grade_level <= -3 then 'IT'
     when students.grade_level between -2 and -1 then 'PK'
@@ -150,18 +245,13 @@ select
   null as password
 from students
 join schools on students.schoolid = schools.school_number
+-- School join graph
+join (select * from StudentorgSourceGroup) StudentorgSourceGroup on StudentorgSourceGroup.dcid = students.dcid
 -- student email join graph
 left join (select * from StudentEmail) StudentEmail on StudentEmail.dcid = students.dcid
 -- multi-guardian join graph
-left join studentcontactassoc on students.dcid = studentcontactassoc.studentdcid
-left join guardianpersonassoc on studentcontactassoc.personid = guardianpersonassoc.personID
-left join guardian on guardianpersonassoc.guardianid = guardian.guardianid
-left join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken 
+join (select * from studenttoguardianGroup) studenttoguardianGroup on studenttoguardianGroup.dcid = students.dcid
 
-group by 'S'||students.dcid, null, null, case students.enroll_status when 0 then 'true' when -1 then 'true' else 'false' end, cast(students.schoolid as varchar2(10)), 
-'student', case when students.student_web_id like '##%' then StudentEmail.email when students.student_web_id like '~~%' then StudentEmail.email when students.student_web_id is not null then students.student_web_id else 'S'||students.dcid end, null, students.state_studentNumber, students.student_web_id, students.id, students.first_name, students.last_name, 
-substr(students.middle_name,0,1), to_char(students.student_number),StudentEmail.email, null, students.home_phone, 
-case when students.grade_level <= -3 then 'IT' when students.grade_level between -2 and -1 then 'PK' when students.grade_level = 0 then 'KG' when students.grade_level between 1 and 13 then trim(to_char(students.grade_level,'00')) when students.grade_level > 13 then 'PS' else 'Other' end, null
 
 union all
 
@@ -174,11 +264,7 @@ select
     when 1 then 'true'
     else 'false'
   end as enabledUser,
-  case 
-    when (listagg(students.schoolid,',') within group (ORDER BY guardian.guardianid)) is null
-    then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
-    else (listagg(students.schoolid,',') within group (ORDER BY guardian.guardianid))
-  end as orgSourcedIds,
+  guardiantostudentSchool.orgSourcedIds,
   'guardian' as role,
   case 
     when pcas_account.username like '##%'
@@ -195,24 +281,18 @@ select
   pcas_emailcontact.emailaddress as email,
   null as sms,
   null as phone,
-  case 
-    when (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,','')) = 'S' 
-    then null 
-    else (replace(listagg('S'||studentcontactassoc.studentdcid,',') within group (ORDER BY guardian.guardianid),'S,',''))
-  end as agentSourcedIds,
+  guardiantostudentGroup.agentSourcedIds,
   null as grades,
   null as password
 from guardian
+join (select * from guardiantostudentSchool) guardiantostudentSchool on guardiantostudentSchool.guardianid = guardian.guardianid
+join (select * from guardiantostudentGroup) guardiantostudentGroup on guardiantostudentGroup.guardianid = guardian.guardianid
 join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken
 left join pcas_emailcontact on pcas_account.pcas_accountID = pcas_emailcontact.pcas_accountid
 left join guardianpersonassoc on guardian.guardianid = guardianpersonassoc.guardianid
 left join studentcontactassoc on guardianpersonassoc.personID = studentcontactassoc.personID 
 left join students on students.DCID = studentcontactassoc.studentdcid
 where guardianpersonassoc.PersonID is not null
-group by 'G'||guardian.guardianid, null, null, case PCAS_ACCOUNT.ISENABLED when 1 then 'true' else 'false' end, '2195', 
-'guardian', case when pcas_account.username like '##%' then pcas_emailcontact.emailaddress when pcas_account.username like '~~%' then pcas_emailcontact.emailaddress else pcas_account.username end, pcas_emailcontact.emailaddress, pcas_account.username, guardian.firstname, guardian.lastname, guardian.middlename,
-cast(guardianpersonassoc.PersonID as varchar2(10)), pcas_emailcontact.emailaddress, null, null, 
-null, null
 
     ]]></sql>
   </query>
