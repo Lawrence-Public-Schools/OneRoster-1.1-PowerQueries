@@ -32,22 +32,28 @@ orgSource as (select
     then cast((select prefs.value from prefs where prefs.name = 'districtnumber') as varchar2(10))
     else cast(sections.SchoolID as varchar2(10))
   end as SchoolID
+from sections),
+SectionExpression as ( select sections.dcid,
+  case
+    when sections.External_Expression is null then sections.expression
+    else sections.External_Expression
+  end as Expression
 from sections)
 select
   sections.id as sourcedId,
   null as status,
   null as dateLastModified,
   case
-    when SectionTeacher.SectionNickname is not null and yearquery.id = sections.termid then SectionTeacher.SectionNickname || ' | ' || yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
-    when SectionTeacher.SectionNickname is not null and yearquery.id != sections.termid then SectionTeacher.SectionNickname || ' | ' || yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
-    when SectionTeacher.SectionNickname is null and yearquery.id = sections.termid then yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
-    when SectionTeacher.SectionNickname is null and yearquery.id != sections.termid then yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
-    else yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || sections.expression || ' | Sec ' || sections.section_number
+    when SectionTeacher.SectionNickname is not null and yearquery.id = sections.termid then SectionTeacher.SectionNickname || ' | ' || yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || SectionExpression.expression || ' | Sec ' || sections.section_number
+    when SectionTeacher.SectionNickname is not null and yearquery.id != sections.termid then SectionTeacher.SectionNickname || ' | ' || yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || SectionExpression.expression || ' | Sec ' || sections.section_number
+    when SectionTeacher.SectionNickname is null and yearquery.id = sections.termid then yearquery.abbreviation || ' | ' || courses.course_name || ' | Per ' || SectionExpression.expression || ' | Sec ' || sections.section_number
+    when SectionTeacher.SectionNickname is null and yearquery.id != sections.termid then yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || SectionExpression.expression || ' | Sec ' || sections.section_number
+    else yearquery.abbreviation || ' | ' || terms.abbreviation || ' | ' || courses.course_name || ' | Per ' || SectionExpression.expression || ' | Sec ' || sections.section_number
   end as title,
   case 
     when sections.grade_level <= -3 then 'IT'
     when sections.grade_level between -2 and -1 then 'PK'
-    when sections.grade_level = 0 then 'KG'
+    when sections.grade_level = 0 then null
     when sections.grade_level between 1 and 13 then trim(to_char(sections.grade_level,'00'))
     when sections.grade_level > 13 then 'PS'
     else 'Other'
@@ -60,7 +66,7 @@ select
   orgSource.schoolid || '-' || SECTIONS.TERMID as termSourcedIds,
   null as subjects,
   null as subjectCodes,
-  sections.expression as periods
+  SectionExpression.expression as periods
 from sections
 left join courses on sections.course_number = courses.course_number
 left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
@@ -68,6 +74,7 @@ left join schools on schools.school_number=sections.schoolid
 left join SectionTeacher on SectionTeacher.TeacherID=sections.Teacher and SectionTeacher.SectionID=sections.id and SectionTeacher.SectionNickname is not null
 left join yearquery on 1=1
 join (select * from orgSource) orgSource on orgSource.dcid = sections.dcid
+join (select * from SectionExpression) SectionExpression on SectionExpression.dcid = sections.dcid
 join (SELECT 
     sectionid,
     COUNT(sectionid) as NO_OF_STUDENTS
