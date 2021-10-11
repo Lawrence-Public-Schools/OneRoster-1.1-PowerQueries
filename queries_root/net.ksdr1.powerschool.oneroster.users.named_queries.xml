@@ -110,6 +110,7 @@ from students
 join studentcontactassoc on students.dcid = studentcontactassoc.studentdcid
 join guardianpersonassoc on studentcontactassoc.personid = guardianpersonassoc.personID
 join guardian on guardianpersonassoc.guardianid = guardian.guardianid
+join GuardianStudent on students.dcid = GuardianStudent.StudentsDCID and guardian.guardianid=GuardianStudent.GuardianID
 join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken
 ),
 studenttoguardianGroup as (select
@@ -133,6 +134,7 @@ left join pcas_emailcontact on pcas_account.pcas_accountID = pcas_emailcontact.p
 left join guardianpersonassoc on guardian.guardianid = guardianpersonassoc.guardianid
 left join studentcontactassoc on guardianpersonassoc.personID = studentcontactassoc.personID 
 left join students on students.DCID = studentcontactassoc.studentdcid
+join GuardianStudent on students.dcid = GuardianStudent.StudentsDCID and guardian.guardianid=GuardianStudent.GuardianID
 where guardianpersonassoc.PersonID is not null
 ),
 guardiantostudentGroup as (select 
@@ -274,10 +276,10 @@ select
     else pcas_account.username
   end as username,
   '{Guardian Email address:' || NVL(pcas_emailcontact.emailaddress, ' ') || '},{Guardian Portal Username:' || NVL(pcas_account.username, ' ') || '}' as userIds,
-  guardian.firstname as givenName,
-  guardian.lastname as familyName,
-  guardian.middlename as middleName,
-  cast(guardianpersonassoc.PersonID as varchar2(10)) as identifier,
+  person.firstname as givenName,
+  person.lastname as familyName,
+  person.middlename as middleName,
+  cast(person.ID as varchar2(10)) as identifier,
   pcas_emailcontact.emailaddress as email,
   null as sms,
   null as phone,
@@ -288,9 +290,9 @@ from guardian
 join (select * from guardiantostudentSchool) guardiantostudentSchool on guardiantostudentSchool.guardianid = guardian.guardianid
 join (select * from guardiantostudentGroup) guardiantostudentGroup on guardiantostudentGroup.guardianid = guardian.guardianid
 join pcas_account on GUARDIAN.accountidentifier = pcas_account.pcas_accounttoken
-left join pcas_emailcontact on pcas_account.pcas_accountID = pcas_emailcontact.pcas_accountid
-left join guardianpersonassoc on guardian.guardianid = guardianpersonassoc.guardianid
-where guardianpersonassoc.PersonID is not null
+join pcas_emailcontact on pcas_account.pcas_accountID = pcas_emailcontact.pcas_accountid
+join guardianpersonassoc on guardian.guardianid = guardianpersonassoc.guardianid
+join person on person.id = guardianpersonassoc.personid
 
     ]]></sql>
   </query>
