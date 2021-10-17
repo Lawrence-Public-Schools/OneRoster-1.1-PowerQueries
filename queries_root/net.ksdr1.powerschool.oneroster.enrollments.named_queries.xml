@@ -56,11 +56,11 @@ select
   
 from sectionteacher
 join schoolstaff on schoolstaff.id = sectionteacher.teacherid
-left join users on schoolstaff.users_dcid = users.dcid
-left join sections on sectionteacher.sectionid = sections.id
-left join schools on users.homeschoolid = schools.school_number
-left join roledef on sectionteacher.roleid = roledef.id
-left join courses on sections.course_number = courses.course_number
+join users on schoolstaff.users_dcid = users.dcid
+join sections on sectionteacher.sectionid = sections.id
+join schools on users.homeschoolid = schools.school_number
+join roledef on sectionteacher.roleid = roledef.id
+join courses on sections.course_number = courses.course_number
 left join yearquery on 1=1
 join (SELECT 
     sectionid,
@@ -93,18 +93,13 @@ select
  to_char(cc.dateenrolled,'yyyy-mm-dd') as beginDate,
  to_char(cc.dateleft-1,'yyyy-mm-dd') as endDate
 from cc
-left join students on cc.studentid = students.id
-left join schools on cc.schoolid = schools.school_number
+join students on cc.studentid = students.id
+join schools on cc.schoolid = schools.school_number and students.schoolid = schools.school_number
 left join yearquery on 1=1
-left join schools on students.schoolid = schools.school_number
-left join sync_studentmap on students.dcid = sync_studentmap.studentsdcid
-left join psm_studentcontact on psm_studentcontact.studentid = sync_studentmap.studentid
-left join psm_studentcontacttype on psm_studentcontacttype.id = psm_studentcontact.studentcontacttypeid
-left join courses on cc.course_number = courses.course_number
+join courses on cc.course_number = courses.course_number
 join sections on cc.sectionid = sections.id
 join teachers t on sections.teacher=t.id and t.ptaccess = 1 and t.status = 1 and t.StaffStatus = 1
 where students.enroll_status = 0
-and psm_studentcontacttype.name = 'Self'
 and (cc.termid between yearquery.id and yearquery.id+99)
 and cc.dateleft > cc.dateenrolled
     ]]></sql>
