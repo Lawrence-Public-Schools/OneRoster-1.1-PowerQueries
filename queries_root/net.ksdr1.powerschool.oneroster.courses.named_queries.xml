@@ -32,7 +32,7 @@ select
   c.course_number as courseCode,
   null as grades,
   orgSource.SchoolID as orgSourcedId,
-  CASE WHEN c.sched_courseSubjectAreaCode IS NOT NULL THEN ',' || c.sched_courseSubjectAreaCode || ',' ELSE NULL END AS subjects,
+  null as subjects,
   null as subjectCodes
   
 from courses c
