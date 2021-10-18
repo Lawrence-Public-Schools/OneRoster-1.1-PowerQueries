@@ -55,10 +55,10 @@ select
   
   
 from sectionteacher
-join schoolstaff on schoolstaff.id = sectionteacher.teacherid
-join users on schoolstaff.users_dcid = users.dcid
 join sections on sectionteacher.sectionid = sections.id
-join schools on users.homeschoolid = schools.school_number
+join schoolstaff on schoolstaff.id = sectionteacher.teacherid and schoolstaff.SchoolID = sections.schoolid
+join schools on schoolstaff.SchoolID = schools.School_Number
+join users on schoolstaff.users_dcid = users.dcid
 join roledef on sectionteacher.roleid = roledef.id
 join courses on sections.course_number = courses.course_number
 left join yearquery on 1=1
@@ -75,7 +75,6 @@ and sectionteacher.sectionid in
   where sections.termid between yearquery.id and yearquery.id+99
 )
 and (users.teacherloginid is not null or users.loginid is not null)
-join teachers t on sections.teacher=t.id and t.ptaccess = 1 and t.status = 1 and t.StaffStatus = 1
 where sections.termid between yearquery.id and yearquery.id+99
 and schoolstaff.status = 1 and schoolstaff.staffstatus = 1 and users.PTAccess = 1
 
