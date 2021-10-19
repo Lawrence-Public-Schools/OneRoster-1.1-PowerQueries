@@ -93,7 +93,7 @@ select
  to_char(cc.dateleft-1,'yyyy-mm-dd') as endDate
 from cc
 join students on cc.studentid = students.id
-join schools on cc.schoolid = schools.school_number and students.schoolid = schools.school_number
+join schools on cc.schoolid = schools.school_number
 left join yearquery on 1=1
 join courses on cc.course_number = courses.course_number
 join sections on cc.sectionid = sections.id
