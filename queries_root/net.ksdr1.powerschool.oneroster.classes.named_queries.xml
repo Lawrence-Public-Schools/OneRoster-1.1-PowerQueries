@@ -59,7 +59,7 @@ select
     else 'Other'
   end as grades,
   courses.dcid as courseSourcedId,
-  null as classCode,
+  courses.course_number || '.' || sections.section_number as classCode,
   'scheduled' as classType,
   sections.room as location,
   orgSource.schoolid as schoolSourcedId,
