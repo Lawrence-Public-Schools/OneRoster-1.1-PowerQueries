@@ -72,6 +72,7 @@ left join courses on sections.course_number = courses.course_number
 left join terms on terms.id=sections.termid and sections.schoolid=terms.schoolid
 left join schools on schools.school_number=sections.schoolid
 left join SectionTeacher on SectionTeacher.TeacherID=sections.Teacher and SectionTeacher.SectionID=sections.id and SectionTeacher.SectionNickname is not null
+join RoleDef on RoleDef.id = sectionteacher.roleid
 left join yearquery on 1=1
 join (select * from orgSource) orgSource on orgSource.dcid = sections.dcid
 join (select * from SectionExpression) SectionExpression on SectionExpression.dcid = sections.dcid
@@ -82,6 +83,7 @@ join (SELECT
     GROUP BY sectionid
     ) q ON sections.id = q.sectionid
 where (sections.termid between yearquery.id and yearquery.id+99)
+and roledef.rolekey = 'com.pearson.powerschool.coteach.primary.teacher'
 Order by q.NO_OF_STUDENTS desc
     ]]></sql>
   </query>
