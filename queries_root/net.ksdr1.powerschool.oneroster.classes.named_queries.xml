@@ -83,7 +83,7 @@ join (SELECT
     GROUP BY sectionid
     ) q ON sections.id = q.sectionid
 where (sections.termid between yearquery.id and yearquery.id+99)
-and (sysdate between sectionteacher.start_date and sectionteacher.end_date)
+and (sysdate between sectionteacher.start_date-30 and sectionteacher.end_date+30)
 and roledef.rolekey = 'com.pearson.powerschool.coteach.primary.teacher'
 Order by q.NO_OF_STUDENTS desc
     ]]></sql>
