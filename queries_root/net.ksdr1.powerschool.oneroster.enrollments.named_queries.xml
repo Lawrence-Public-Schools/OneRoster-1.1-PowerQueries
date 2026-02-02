@@ -35,10 +35,10 @@ select
     when 'Co-teacher' then 'teacher'
     when 'DESE Co-teacher' then 'teacher'
     when 'ESL/SPED Teacher' then 'teacher'
-    when 'Teacher''s Aide' then 'aide'
+    when 'Teacher''s Aide' then 'teacher'
     when 'Principal' then 'administrator'
     when 'School Administrator' then 'administrator'
-    else 'aide'
+    else 'teacher'
   end as role,
   case roledef.name
     when 'Lead Teacher' then 'true'
